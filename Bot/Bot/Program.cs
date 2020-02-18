@@ -43,6 +43,7 @@ namespace Andead.CameraBot
                 while (!cts.IsCancellationRequested)
                 {
                     Update[] updates = await telegram.GetUpdatesAsync(offset,
+                        limit: options.TelegramPollingLimit,
                         timeout: options.TelegramPollingTimeoutSeconds,
                         cancellationToken: cts.Token);
 
