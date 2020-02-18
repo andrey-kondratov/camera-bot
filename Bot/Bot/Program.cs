@@ -54,10 +54,17 @@ namespace Andead.CameraBot
 
                         foreach (Update update in updates)
                         {
-                            Log.Information($"Sending photo to chat of update {update.Id}.");
-                            await telegram.SendPhotoAsync(update.Message.Chat.Id, photo, cancellationToken: cts.Token);
-
                             offset = update.Id + 1;
+
+                            string username = update.Message.Chat.Username;
+                            if (string.IsNullOrEmpty(username) || !options.TelegramAllowedUsernames.Contains(username))
+                            {
+                                Log.Warning($"Discarded message from {username}");
+                                continue;
+                            }
+
+                            Log.Information($"Sending photo to {username}.");
+                            await telegram.SendPhotoAsync(update.Message.Chat.Id, photo, cancellationToken: cts.Token);
                         }
 
                         Log.Information($"Finished posting.");
