@@ -5,10 +5,10 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster-arm32v7 AS build
 WORKDIR /src
-COPY ["Server.csproj", "Server/"]
-RUN dotnet restore "Server/Server.csproj"
+COPY ["Server.csproj", "."]
+RUN dotnet restore "Server.csproj"
 COPY . .
-WORKDIR "/src/Server"
+WORKDIR "/src"
 RUN dotnet build "Server.csproj" -c Release -o /app/build
 
 FROM build AS publish
