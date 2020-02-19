@@ -5,7 +5,7 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster-arm32v7 AS build
 WORKDIR /src
-COPY ["Server/Server.csproj", "Server/"]
+COPY ["Server.csproj", "Server/"]
 RUN dotnet restore "Server/Server.csproj"
 COPY . .
 WORKDIR "/src/Server"
