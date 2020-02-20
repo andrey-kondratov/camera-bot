@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MihaZupan;
+using MoreLinq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -164,8 +165,16 @@ namespace Andead.CameraBot.Server.Messaging
 
         private IReplyMarkup GetReplyMarkup(IEnumerable<string> cameraIds)
         {
-            var keyboardRow = cameraIds.Select(id => new KeyboardButton(id));
-            var markup = new ReplyKeyboardMarkup(keyboardRow, resizeKeyboard: true);
+            IEnumerable<IEnumerable<KeyboardButton>> GetKeyboard()
+            {
+                foreach (IEnumerable<string> row in cameraIds.Batch(3))
+                {
+                    yield return row.Select(id => new KeyboardButton(id));
+                }
+            }
+
+            IEnumerable<IEnumerable<KeyboardButton>> keyboard = GetKeyboard();
+            var markup = new ReplyKeyboardMarkup(keyboard);
 
             return markup;
         }
