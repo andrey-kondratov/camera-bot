@@ -4,7 +4,6 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Andead.CameraBot.Server</RootNamespace>
     <UserSecretsId>2e1ff698-3c8c-47fa-8c30-e5678f12848d</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>

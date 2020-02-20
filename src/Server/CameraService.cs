@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -20,9 +21,17 @@ namespace Andead.CameraBot.Server
             _client = new HttpClient();
         }
 
-        public async Task<Stream> GetSnapshot()
+        public async Task<Stream> GetSnapshot(string cameraId)
         {
-            string url = _options.Value.Camera.SnapshotUrl;
+            Dictionary<string, CameraOptions> cameras = _options.Value.Cameras;
+
+            if (!cameras.TryGetValue(cameraId, out CameraOptions camera))
+            {
+                _logger.LogWarning("Invalid camera id {CameraId}.", cameraId);
+                return null;
+            }
+
+            string url = camera.SnapshotUrl;
 
             try
             {

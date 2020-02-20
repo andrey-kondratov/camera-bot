@@ -1,6 +1,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Andead.CameraBot.Server.Messaging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
@@ -31,20 +32,20 @@ namespace Andead.CameraBot.Server
             {
                 await Task.Delay(_options.PollingInterval);
 
-                long? chatId = await _messenger.GetIncomingMessageChatId(stoppingToken);
-                if (chatId == null)
+                SnapshotRequest request = await _messenger.GetSnapshotRequest(stoppingToken);
+                if (request == null)
                 {
                     continue;
                 }
 
-                using Stream snapshot = await _camera.GetSnapshot();
+                using Stream snapshot = await _camera.GetSnapshot(request.Text);
                 if (snapshot == null)
                 {
-                    await _messenger.SendOops(chatId.Value, stoppingToken);
+                    await _messenger.SendOops(request.ChatId, stoppingToken);
                     continue;
                 }
 
-                await _messenger.SendSnapshot(snapshot, chatId.Value, stoppingToken);
+                await _messenger.SendSnapshot(snapshot, request.ChatId, stoppingToken);
             }
         }
     }

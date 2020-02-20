@@ -1,9 +1,11 @@
-﻿namespace Andead.CameraBot.Server
+﻿using System.Collections.Generic;
+
+namespace Andead.CameraBot.Server
 {
     public class BotOptions
     {
         public TelegramOptions Telegram { get; set; } = new TelegramOptions();
-        public CameraOptions Camera { get; set; } = new CameraOptions();
+        public Dictionary<string, CameraOptions> Cameras { get; set; } = new Dictionary<string, CameraOptions>();
         public int PollingInterval { get; set; } = 1000;
     }
 }

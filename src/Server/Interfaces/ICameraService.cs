@@ -5,6 +5,6 @@ namespace Andead.CameraBot.Server
 {
     interface ICameraService
     {
-        Task<Stream> GetSnapshot();
+        Task<Stream> GetSnapshot(string cameraId);
     }
 }
