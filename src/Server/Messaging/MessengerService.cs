@@ -11,6 +11,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Andead.CameraBot.Server.Messaging
 {
@@ -83,11 +84,13 @@ namespace Andead.CameraBot.Server.Messaging
             return null;
         }
 
-        public async Task SendOops(long chatId, CancellationToken cancellationToken)
+        public async Task SendOops(long chatId, IEnumerable<string> cameraIds, CancellationToken cancellationToken)
         {
             try
             {
-                await _client.SendTextMessageAsync(chatId, "Something went wrong. Try again.", cancellationToken: cancellationToken);
+                IReplyMarkup replyMarkup = GetReplyMarkup(cameraIds);
+                await _client.SendTextMessageAsync(chatId, "Something went wrong. Try again.", 
+                    replyMarkup: replyMarkup, cancellationToken: cancellationToken);
             }
             catch (TaskCanceledException)
             {
@@ -99,13 +102,14 @@ namespace Andead.CameraBot.Server.Messaging
             }
         }
 
-        public async Task SendSnapshot(Stream snapshot, long chatId, CancellationToken cancellationToken)
+        public async Task SendSnapshot(Stream snapshot, long chatId, IEnumerable<string> cameraIds, CancellationToken cancellationToken)
         {
-            var photo = new InputOnlineFile(snapshot);
-
             try
             {
-                await _client.SendPhotoAsync(chatId, photo, cancellationToken: cancellationToken);
+                var photo = new InputOnlineFile(snapshot);
+                IReplyMarkup replyMarkup = GetReplyMarkup(cameraIds);
+
+                await _client.SendPhotoAsync(chatId, photo, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
 
                 _logger.LogInformation("Snapshot sent to chat {ChatId}", chatId);
             }
@@ -146,6 +150,14 @@ namespace Andead.CameraBot.Server.Messaging
             }
 
             return false;
+        }
+
+        private IReplyMarkup GetReplyMarkup(IEnumerable<string> cameraIds)
+        {
+            var keyboardRow = cameraIds.Select(id => new KeyboardButton(id));
+            var markup = new ReplyKeyboardMarkup(keyboardRow, resizeKeyboard: true);
+
+            return markup;
         }
     }
 }

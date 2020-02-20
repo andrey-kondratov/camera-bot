@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -19,6 +20,11 @@ namespace Andead.CameraBot.Server
             _options = options;
             _logger = logger;
             _client = new HttpClient();
+        }
+
+        public Task<IEnumerable<string>> GetAvailableCameraIds()
+        {
+            return Task.FromResult(_options.Value.Cameras.Keys.Select(key => key));
         }
 
         public async Task<Stream> GetSnapshot(string cameraId)

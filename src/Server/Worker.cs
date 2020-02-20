@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,14 +39,16 @@ namespace Andead.CameraBot.Server
                     continue;
                 }
 
+                IEnumerable<string> cameraIds = await _camera.GetAvailableCameraIds();
+
                 using Stream snapshot = await _camera.GetSnapshot(request.Text);
                 if (snapshot == null)
                 {
-                    await _messenger.SendOops(request.ChatId, stoppingToken);
+                    await _messenger.SendOops(request.ChatId, cameraIds, stoppingToken);
                     continue;
                 }
 
-                await _messenger.SendSnapshot(snapshot, request.ChatId, stoppingToken);
+                await _messenger.SendSnapshot(snapshot, request.ChatId, cameraIds, stoppingToken);
             }
         }
     }
