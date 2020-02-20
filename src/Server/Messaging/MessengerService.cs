@@ -66,7 +66,7 @@ namespace Andead.CameraBot.Server.Messaging
                 _lastUpdateId = update.Id;
 
                 string username = message.Chat.Username;
-                if (allowedUsernames.Contains(username))
+                if (!allowedUsernames.Any() || allowedUsernames.Contains(username))
                 {
                     long chatId = message.Chat.Id;
                     string text = message.Text;
