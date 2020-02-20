@@ -1,0 +1,3 @@
+build:
+  docker:
+    worker: src/Server/Dockerfile
