@@ -25,8 +25,18 @@ namespace Andead.CameraBot.Server.Messaging
 
         public MessengerService(IOptions<BotOptions> options, ILogger<MessengerService> logger)
         {
-            _client = new TelegramBotClient(options.Value.Telegram.ApiToken,
-                new HttpToSocks5Proxy(options.Value.Telegram.Socks5.Hostname, options.Value.Telegram.Socks5.Port));
+            Socks5Options socks5Options = options.Value.Telegram.Socks5;
+
+            if (!string.IsNullOrEmpty(socks5Options.Hostname))
+            {
+                _client = new TelegramBotClient(options.Value.Telegram.ApiToken,
+                    new HttpToSocks5Proxy(options.Value.Telegram.Socks5.Hostname, options.Value.Telegram.Socks5.Port));
+            }
+            else
+            {
+                _client = new TelegramBotClient(options.Value.Telegram.ApiToken);
+            }
+
             _options = options;
             _logger = logger;
         }
