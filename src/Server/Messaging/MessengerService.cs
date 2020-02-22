@@ -82,7 +82,7 @@ namespace Andead.CameraBot.Server.Messaging
                     long chatId = message.Chat.Id;
                     string text = message.Text;
 
-                    _logger.LogInformation("Snapshot request with text {Text} received from chat {ChatId}", message.Text, chatId);
+                    _logger.LogInformation("Snapshot request received, chat id: {ChatId}, message: {@Message}", chatId, message);
                     return new SnapshotRequest { Text = text, ChatId = chatId };
                 }
 
@@ -95,11 +95,11 @@ namespace Andead.CameraBot.Server.Messaging
             return null;
         }
 
-        public async Task SendOops(long chatId, IEnumerable<string> cameraIds, CancellationToken cancellationToken)
+        public async Task SendOops(long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken)
         {
             try
             {
-                IReplyMarkup replyMarkup = GetReplyMarkup(cameraIds);
+                IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
                 await _client.SendTextMessageAsync(chatId, "Something went wrong. Try again.", 
                     replyMarkup: replyMarkup, cancellationToken: cancellationToken);
             }
@@ -113,12 +113,12 @@ namespace Andead.CameraBot.Server.Messaging
             }
         }
 
-        public async Task SendSnapshot(Stream snapshot, long chatId, IEnumerable<string> cameraIds, CancellationToken cancellationToken)
+        public async Task SendSnapshot(Stream snapshot, long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken)
         {
             try
             {
                 var photo = new InputOnlineFile(snapshot);
-                IReplyMarkup replyMarkup = GetReplyMarkup(cameraIds);
+                IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
 
                 await _client.SendPhotoAsync(chatId, photo, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
 
@@ -163,11 +163,11 @@ namespace Andead.CameraBot.Server.Messaging
             return false;
         }
 
-        private IReplyMarkup GetReplyMarkup(IEnumerable<string> cameraIds)
+        private IReplyMarkup GetReplyMarkup(IEnumerable<string> cameraNames)
         {
             IEnumerable<IEnumerable<KeyboardButton>> GetKeyboard()
             {
-                foreach (IEnumerable<string> row in cameraIds.Batch(3))
+                foreach (IEnumerable<string> row in cameraNames.Batch(3))
                 {
                     yield return row.Select(id => new KeyboardButton(id));
                 }

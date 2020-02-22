@@ -9,7 +9,7 @@ namespace Andead.CameraBot.Server.Messaging
     {
         Task<bool> Test(CancellationToken cancellationToken);
         Task<SnapshotRequest> GetSnapshotRequest(CancellationToken cancellationToken);
-        Task SendOops(long chatId, IEnumerable<string> cameraIds, CancellationToken cancellationToken);
-        Task SendSnapshot(Stream snapshot, long chatId, IEnumerable<string> cameraIds, CancellationToken cancellationToken);
+        Task SendOops(long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken);
+        Task SendSnapshot(Stream snapshot, long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken);
     }
 }

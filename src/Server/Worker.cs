@@ -39,7 +39,7 @@ namespace Andead.CameraBot.Server
                     continue;
                 }
 
-                IEnumerable<string> cameraIds = await _camera.GetAvailableCameraIds();
+                IEnumerable<string> cameraIds = await _camera.GetAvailableCameraNames();
 
                 using Stream snapshot = await _camera.GetSnapshot(request.Text);
                 if (snapshot == null)

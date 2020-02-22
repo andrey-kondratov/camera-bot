@@ -22,18 +22,18 @@ namespace Andead.CameraBot.Server
             _client = new HttpClient();
         }
 
-        public Task<IEnumerable<string>> GetAvailableCameraIds()
+        public Task<IEnumerable<string>> GetAvailableCameraNames()
         {
-            return Task.FromResult(_options.Value.Cameras.Keys.Select(key => key));
+            return Task.FromResult(_options.Value.Cameras.Values.Select(value => value.Name));
         }
 
-        public async Task<Stream> GetSnapshot(string cameraId)
+        public async Task<Stream> GetSnapshot(string cameraName)
         {
-            Dictionary<string, CameraOptions> cameras = _options.Value.Cameras;
-
-            if (!cameras.TryGetValue(cameraId, out CameraOptions camera))
+            CameraOptions camera = _options.Value.Cameras.Values
+                .FirstOrDefault(c => string.Equals(cameraName, c.Name, StringComparison.OrdinalIgnoreCase));
+            if (camera == null)
             {
-                _logger.LogWarning("Invalid camera id {CameraId}.", cameraId);
+                _logger.LogWarning("Camera with name {CameraName} was not found.", cameraName);
                 return null;
             }
 
