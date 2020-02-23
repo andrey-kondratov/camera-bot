@@ -4,8 +4,8 @@ using MihaZupan;
 using MoreLinq;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -113,15 +113,16 @@ namespace Andead.CameraBot.Server.Messaging
             }
         }
 
-        public async Task SendSnapshot(Stream snapshot, long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken)
+        public async Task SendSnapshot(Snapshot snapshot, long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken)
         {
             try
             {
-                var photo = new InputOnlineFile(snapshot);
+                var photo = new InputOnlineFile(snapshot.Stream);
+                string caption = GetCaptionMarkdown(snapshot);
                 IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
 
-                await _client.SendPhotoAsync(chatId, photo, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
-
+                await _client.SendPhotoAsync(chatId, photo, caption, ParseMode.Markdown, 
+                    replyMarkup: replyMarkup, cancellationToken: cancellationToken);
                 _logger.LogInformation("Snapshot sent to chat {ChatId}", chatId);
             }
             catch (TaskCanceledException)
@@ -177,6 +178,21 @@ namespace Andead.CameraBot.Server.Messaging
             var markup = new ReplyKeyboardMarkup(keyboard);
 
             return markup;
+        }
+
+        private string GetCaptionMarkdown(Snapshot snapshot)
+        {
+            var builder = new StringBuilder();
+
+            DateTime taken = snapshot.TakenUtc.AddHours(_options.Value.HoursOffset);
+            builder.AppendFormat($"{{0:{_options.Value.DateTimeFormat}}}", taken);
+            builder.AppendFormat(": {0}", snapshot.CameraName);
+            if (!string.IsNullOrEmpty(snapshot.CameraUrl))
+            {
+                builder.AppendFormat(". [Watch live]({0})", snapshot.CameraUrl);
+            }
+
+            return builder.ToString();
         }
     }
 }

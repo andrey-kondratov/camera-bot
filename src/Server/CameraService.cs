@@ -27,7 +27,7 @@ namespace Andead.CameraBot.Server
             return Task.FromResult(_options.Value.Cameras.Values.Select(value => value.Name));
         }
 
-        public async Task<Stream> GetSnapshot(string cameraName)
+        public async Task<Snapshot> GetSnapshot(string cameraName)
         {
             CameraOptions camera = _options.Value.Cameras.Values
                 .FirstOrDefault(c => string.Equals(cameraName, c.Name, StringComparison.OrdinalIgnoreCase));
@@ -37,11 +37,13 @@ namespace Andead.CameraBot.Server
                 return null;
             }
 
-            string url = camera.SnapshotUrl;
+            string snapshotUrl = camera.SnapshotUrl;
 
             try
             {
-                return await _client.GetStreamAsync(url);
+                var stream = await _client.GetStreamAsync(snapshotUrl);
+
+                return new Snapshot { Stream = stream, CameraName = camera.Name, CameraUrl = camera.Url};
             }
             catch (TaskCanceledException)
             {
@@ -49,7 +51,7 @@ namespace Andead.CameraBot.Server
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "Error getting snapshot from {SnapshotUrl}.", url);
+                _logger.LogError(exception, "Error getting snapshot from {SnapshotUrl}.", snapshotUrl);
             }
 
             return null;

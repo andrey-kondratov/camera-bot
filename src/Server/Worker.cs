@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Andead.CameraBot.Server.Messaging;
@@ -41,7 +40,7 @@ namespace Andead.CameraBot.Server
 
                 IEnumerable<string> cameraIds = await _camera.GetAvailableCameraNames();
 
-                using Stream snapshot = await _camera.GetSnapshot(request.Text);
+                using Snapshot snapshot = await _camera.GetSnapshot(request.Text);
                 if (snapshot == null)
                 {
                     await _messenger.SendOops(request.ChatId, cameraIds, stoppingToken);
