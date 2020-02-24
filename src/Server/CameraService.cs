@@ -27,23 +27,34 @@ namespace Andead.CameraBot.Server
             return Task.FromResult(_options.Value.Cameras.Values.Select(value => value.Name));
         }
 
-        public async Task<Snapshot> GetSnapshot(string cameraName)
+        public Task<Snapshot> GetSnapshot(string cameraName)
         {
             CameraOptions camera = _options.Value.Cameras.Values
                 .FirstOrDefault(c => string.Equals(cameraName, c.Name, StringComparison.OrdinalIgnoreCase));
             if (camera == null)
             {
                 _logger.LogWarning("Camera with name {CameraName} was not found.", cameraName);
-                return null;
+                return Task.FromResult<Snapshot>(null);
             }
 
-            string snapshotUrl = camera.SnapshotUrl;
+            var snapshot = new Snapshot { CameraName = camera.Name, CameraUrl = camera.Url };
 
+            string snapshotUrl = camera.SnapshotUrl;
+            if (!camera.IsLocal)
+            {
+                snapshot.Url = camera.SnapshotUrl;
+                return Task.FromResult(snapshot);
+            }
+
+            return GetSnapshotInternal(snapshot, snapshotUrl);
+        }
+
+        private async Task<Snapshot> GetSnapshotInternal(Snapshot snapshot, string snapshotUrl)
+        {
             try
             {
-                var stream = await _client.GetStreamAsync(snapshotUrl);
-
-                return new Snapshot { Stream = stream, CameraName = camera.Name, CameraUrl = camera.Url};
+                snapshot.Stream = await _client.GetStreamAsync(snapshotUrl);
+                return snapshot;
             }
             catch (TaskCanceledException)
             {
