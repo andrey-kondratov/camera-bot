@@ -9,7 +9,6 @@ namespace Andead.CameraBot.Server
         public string CameraName { get; set; }
         public string CameraUrl { get; set; }
         public Stream Stream { get; set; }
-        public string Url { get; set; }
 
         public void Dispose()
         {

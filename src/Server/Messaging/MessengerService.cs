@@ -118,7 +118,7 @@ namespace Andead.CameraBot.Server.Messaging
         {
             try
             {
-                InputOnlineFile photo = GetInputOnlineFile(snapshot);
+                var photo = new InputOnlineFile(snapshot.Stream);
                 string caption = GetCaptionMarkdown(snapshot);
                 IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
 
@@ -179,16 +179,6 @@ namespace Andead.CameraBot.Server.Messaging
             var markup = new ReplyKeyboardMarkup(keyboard);
 
             return markup;
-        }
-
-        private InputOnlineFile GetInputOnlineFile(Snapshot snapshot)
-        {
-            if (!string.IsNullOrEmpty(snapshot.Url))
-            {
-                return new InputOnlineFile(snapshot.Url);
-            }
-
-            return new InputOnlineFile(snapshot.Stream);
         }
 
         private string GetCaptionMarkdown(Snapshot snapshot)

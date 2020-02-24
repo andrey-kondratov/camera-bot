@@ -36,24 +36,19 @@ namespace Andead.CameraBot.Server
                 return Task.FromResult<Snapshot>(null);
             }
 
-            var snapshot = new Snapshot { CameraName = camera.Name, CameraUrl = camera.Url };
-
-            string snapshotUrl = camera.SnapshotUrl;
-            if (!camera.IsLocal)
-            {
-                snapshot.Url = camera.SnapshotUrl;
-                return Task.FromResult(snapshot);
-            }
-
-            return GetSnapshotInternal(snapshot, snapshotUrl);
+            return GetSnapshotInternal(camera);
         }
 
-        private async Task<Snapshot> GetSnapshotInternal(Snapshot snapshot, string snapshotUrl)
+        private async Task<Snapshot> GetSnapshotInternal(CameraOptions camera)
         {
             try
             {
-                snapshot.Stream = await _client.GetStreamAsync(snapshotUrl);
-                return snapshot;
+                return new Snapshot
+                {
+                    CameraName = camera.Name,
+                    CameraUrl = camera.Url,
+                    Stream = await _client.GetStreamAsync(camera.SnapshotUrl)
+                };
             }
             catch (TaskCanceledException)
             {
@@ -61,7 +56,7 @@ namespace Andead.CameraBot.Server
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "Error getting snapshot from {SnapshotUrl}.", snapshotUrl);
+                _logger.LogError(exception, "Error getting snapshot from {@Camera}.", camera);
             }
 
             return null;
