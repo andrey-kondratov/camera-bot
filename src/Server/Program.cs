@@ -18,6 +18,7 @@ namespace Andead.CameraBot.Server
                 .MinimumLevel.Information()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
+                .Enrich.WithProperty("Version", Assembly.GetEntryAssembly().GetName().Version)
                 .WriteTo.Console(new RenderedCompactJsonFormatter())
                 .CreateLogger();
 

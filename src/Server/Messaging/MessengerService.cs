@@ -100,8 +100,9 @@ namespace Andead.CameraBot.Server.Messaging
             try
             {
                 IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
-                await _client.SendTextMessageAsync(chatId, "Something went wrong. Try again.", 
+                Message message = await _client.SendTextMessageAsync(chatId, "Something went wrong. Try again.", 
                     replyMarkup: replyMarkup, cancellationToken: cancellationToken);
+                _logger.LogInformation("Sent Oops to chat {chatId}: {@Message}", chatId, message);
             }
             catch (TaskCanceledException)
             {
@@ -121,9 +122,9 @@ namespace Andead.CameraBot.Server.Messaging
                 string caption = GetCaptionMarkdown(snapshot);
                 IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
 
-                await _client.SendPhotoAsync(chatId, photo, caption, ParseMode.Markdown, 
+                Message message = await _client.SendPhotoAsync(chatId, photo, caption, ParseMode.Markdown, 
                     replyMarkup: replyMarkup, cancellationToken: cancellationToken);
-                _logger.LogInformation("Snapshot sent to chat {ChatId}", chatId);
+                _logger.LogInformation("Snapshot sent to chat {ChatId}: {@Message}", chatId, message);
             }
             catch (TaskCanceledException)
             {
