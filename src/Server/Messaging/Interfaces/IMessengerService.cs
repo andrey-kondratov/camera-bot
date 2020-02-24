@@ -8,7 +8,7 @@ namespace Andead.CameraBot.Server.Messaging
     {
         Task<bool> Test(CancellationToken cancellationToken);
         Task<SnapshotRequest> GetSnapshotRequest(CancellationToken cancellationToken);
-        Task SendOops(long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken);
         Task SendSnapshot(Snapshot snapshot, long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken);
+        Task SendGreeting(long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken);
     }
 }

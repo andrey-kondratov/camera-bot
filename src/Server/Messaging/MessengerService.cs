@@ -95,25 +95,6 @@ namespace Andead.CameraBot.Server.Messaging
             return null;
         }
 
-        public async Task SendOops(long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken)
-        {
-            try
-            {
-                IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
-                Message message = await _client.SendTextMessageAsync(chatId, "Something went wrong. Try again.", 
-                    replyMarkup: replyMarkup, cancellationToken: cancellationToken);
-                _logger.LogInformation("Sent Oops to chat {chatId}: {@Message}", chatId, message);
-            }
-            catch (TaskCanceledException)
-            {
-                // ignored
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Error sending Oops message to chat {ChatId}", chatId);
-            }
-        }
-
         public async Task SendSnapshot(Snapshot snapshot, long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken)
         {
             try
@@ -163,6 +144,25 @@ namespace Andead.CameraBot.Server.Messaging
             }
 
             return false;
+        }
+
+        public async Task SendGreeting(long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken)
+        {
+            try
+            {
+                IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
+                Message message = await _client.SendTextMessageAsync(chatId, "Send the camera name, I'll send a photo from it. ",
+                    replyMarkup: replyMarkup, cancellationToken: cancellationToken);
+                _logger.LogInformation("Sent greeting to chat {chatId}: {@Message}", chatId, message);
+            }
+            catch (TaskCanceledException)
+            {
+                // ignored
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Error sending greeting to chat {ChatId}", chatId);
+            }
         }
 
         private IReplyMarkup GetReplyMarkup(IEnumerable<string> cameraNames)

@@ -43,7 +43,7 @@ namespace Andead.CameraBot.Server
                 using Snapshot snapshot = await _camera.GetSnapshot(request.Text);
                 if (snapshot == null)
                 {
-                    await _messenger.SendOops(request.ChatId, cameraIds, stoppingToken);
+                    await _messenger.SendGreeting(request.ChatId, cameraIds, stoppingToken);
                     continue;
                 }
 
