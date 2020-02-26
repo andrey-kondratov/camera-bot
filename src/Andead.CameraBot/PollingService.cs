@@ -1,24 +1,28 @@
-using System.Collections.Generic;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Andead.CameraBot.Media;
+using Andead.CameraBot.Interfaces;
 using Andead.CameraBot.Messaging;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Andead.CameraBot
 {
-    public class Worker : BackgroundService
+    public class PollingService : BackgroundService
     {
-        private readonly ICameraService _camera;
+        private readonly ISnapshotRequestHandler _handler;
+        private readonly ILogger<PollingService> _logger;
         private readonly IMessenger _messenger;
         private readonly CameraBotOptions _options;
 
-        public Worker(ICameraService cameraService, IMessenger messenger, IOptions<CameraBotOptions> options)
+        public PollingService(IMessenger messenger, ISnapshotRequestHandler handler, IOptions<CameraBotOptions> options,
+            ILogger<PollingService> logger)
         {
             _options = options.Value;
-            _camera = cameraService;
             _messenger = messenger;
+            _handler = handler;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,16 +43,15 @@ namespace Andead.CameraBot
                     continue;
                 }
 
-                IEnumerable<string> cameraIds = await _camera.GetAvailableCameraNames();
-
-                using Snapshot snapshot = await _camera.GetSnapshot(request.Text);
-                if (snapshot == null)
+                try
                 {
-                    await _messenger.SendGreeting(request.ChatId, cameraIds, stoppingToken);
-                    continue;
+                    await _handler.Handle(request, stoppingToken);
                 }
-
-                await _messenger.SendSnapshot(snapshot, request.ChatId, cameraIds, stoppingToken);
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Unhandled exception handling snapshot request: {@SnapshotRequest}",
+                        request);
+                }
             }
         }
     }

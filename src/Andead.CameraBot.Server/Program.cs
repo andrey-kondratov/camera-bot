@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
-using Serilog.Formatting.Compact;
 
 namespace Andead.CameraBot.Server
 {
@@ -26,7 +25,11 @@ namespace Andead.CameraBot.Server
                     Telegram = typeof(Messenger).Assembly.GetName().Version.ToString(3),
                     Server = typeof(Program).Assembly.GetName().Version.ToString(3)
                 }, true)
-                .WriteTo.Console(new RenderedCompactJsonFormatter())
+                .WriteTo.Console(
+#if !DEBUG
+                    new Serilog.Formatting.Json.JsonFormatter()
+#endif
+                )
                 .CreateLogger();
 
             try
@@ -83,6 +86,7 @@ namespace Andead.CameraBot.Server
 
                 services
                     .AddCameraBot(configuration.GetSection("Bot"))
+                    .AddPolling()
                     .AddTelegram(configuration.GetSection("Bot:Telegram"));
             });
 
