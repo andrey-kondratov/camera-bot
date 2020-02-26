@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim AS base
+WORKDIR /app
+
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
+WORKDIR /src
+COPY ["Andead.CameraBot.Server/Andead.CameraBot.Server.csproj", "Andead.CameraBot.Server/"]
+COPY ["Andead.CameraBot.Telegram/Andead.CameraBot.Telegram.csproj", "Andead.CameraBot.Telegram/"]
+COPY ["Andead.CameraBot/Andead.CameraBot.csproj", "Andead.CameraBot/"]
+RUN dotnet restore "Andead.CameraBot.Server/Andead.CameraBot.Server.csproj"
+COPY . .
+WORKDIR "/src/Andead.CameraBot.Server"
+RUN dotnet build "Andead.CameraBot.Server.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Andead.CameraBot.Server.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "cbot.dll"]
