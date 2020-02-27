@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using Andead.CameraBot.Messaging;
 using Andead.CameraBot.Telegram;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,8 +20,8 @@ namespace Andead.CameraBot.Server
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Version", new
                 {
-                    Bot = typeof(IMessenger).Assembly.GetName().Version.ToString(3),
-                    Telegram = typeof(Messenger).Assembly.GetName().Version.ToString(3),
+                    Bot = typeof(CameraBotOptions).Assembly.GetName().Version.ToString(3),
+                    Telegram = typeof(TelegramOptions).Assembly.GetName().Version.ToString(3),
                     Server = typeof(Program).Assembly.GetName().Version.ToString(3)
                 }, true)
                 .WriteTo.Console(
@@ -86,7 +85,6 @@ namespace Andead.CameraBot.Server
 
                 services
                     .AddCameraBot(configuration.GetSection("Bot"))
-                    .AddPolling()
                     .AddTelegram(configuration.GetSection("Bot:Telegram"));
             });
 

@@ -1,6 +1,4 @@
-﻿using System;
-using Andead.CameraBot.Interfaces;
-using Andead.CameraBot.Media;
+﻿using Andead.CameraBot.Media;
 using Andead.CameraBot.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,7 +10,7 @@ namespace Andead.CameraBot
         {
             builder.Services.AddOptions();
             builder.Services.AddTransient<ICameraService, CameraService>();
-            builder.Services.AddTransient<ISnapshotRequestHandler, SnapshotRequestHandler>();
+            builder.Services.AddHostedService<BotService>();
 
             return builder;
         }
@@ -22,17 +20,6 @@ namespace Andead.CameraBot
         {
             builder.Services.AddTransient<IMessenger, TMessenger>();
             return builder;
-        }
-
-        public static ICameraBotBuilder AddPolling(this ICameraBotBuilder builder)
-        {
-            builder.Services.AddHostedService<PollingService>();
-            return builder;
-        }
-
-        public static ICameraBotBuilder AddWebhooks(this ICameraBotBuilder builder)
-        {
-            throw new NotSupportedException();
         }
     }
 }
