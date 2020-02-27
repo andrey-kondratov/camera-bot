@@ -48,6 +48,7 @@ namespace Andead.CameraBot.Server
         public static IWebHostBuilder CreateHostBuilder(string[] args)
         {
             return WebHost.CreateDefaultBuilder<Startup>(args)
+                .UseKestrel(options => options.ListenLocalhost(int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "443")))
                 .UseSerilog();
         }
     }

@@ -41,7 +41,6 @@ namespace Andead.CameraBot.Server
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
             app.UseSerilogRequestLogging();
         }
     }
