@@ -22,9 +22,19 @@ Can be run in Docker or as a standalone app. Uses long-polling to get updates fr
 
 ## Run
 
-```bash
+```
 docker run kondranazzo/camera-bot \
   -e Bot__Telegram__ApiToken=123456789:ABCDEFGH \
-  -e Bot__Telegram__Cameras__garden__Name=Garden \
-  -e Bot__Telegram__Cameras__garden__SnapshotUrl=http://12.34.56.78/snapshot.jpg
+  -e Bot__Cameras__garden__Name=Garden \
+  -e Bot__Cameras__garden__SnapshotUrl=http://12.34.56.78/snapshot.jpg
+  -e Bot__Cameras__garden__Url=http://12.34.56.78/video.html # optional, used only as an external link in captions
 ```
+
+### SOCKS
+
+Set `Bot__Telegram__Socks5__Hostname` and `Bot__Telegram__Socks5__Port` environment variables.
+
+### Usernames white lists
+
+Set `Bot__Telegram__AllowedUsernames__0` to the first username, `Bot__Telegram__AllowedUsernames__1` to the second, and so on.
+
