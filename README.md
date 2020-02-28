@@ -1,3 +1,9 @@
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/andead/camera-bot)
+![GitHub last commit](https://img.shields.io/github/last-commit/andead/camera-bot)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/kondranazzo/camera-bot)](https://hub.docker.com/r/kondranazzo/camera-bot/builds)
+[![Docker Pulls](https://img.shields.io/docker/pulls/kondranazzo/camera-bot)](https://hub.docker.com/r/kondranazzo/camera-bot)
+![GitHub](https://img.shields.io/github/license/andead/camera-bot)
+
 # Camera bot
 
 A bot that responds to private messages with snapshots from webcams. 
