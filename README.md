@@ -51,7 +51,7 @@ Via appsettings.json:
 Via environment variables. I.e., for API token:
 
 ```bash
-dotnet run cambot -e Bot__Telegram__ApiToken=123456789:ABCDEFGH
+docker run cambot -e Bot__Telegram__ApiToken=123456789:ABCDEFGH
 ```
 
 ## Build
