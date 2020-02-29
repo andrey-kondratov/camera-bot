@@ -1,23 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Andead.CameraBot.Media;
 using Andead.CameraBot.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Andead.CameraBot
 {
-    public class BotService : IHostedService
+    internal class BotService : IHostedService
     {
         private readonly ILogger<BotService> _logger;
-        private readonly ICameraService _cameraService;
         private readonly IMessenger _messenger;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public BotService(ICameraService cameraService, IMessenger messenger, ILogger<BotService> logger)
+        public BotService(IServiceScopeFactory serviceScopeFactory, IMessenger messenger, ILogger<BotService> logger)
         {
-            _cameraService = cameraService;
+            _serviceScopeFactory = serviceScopeFactory;
             _messenger = messenger;
             _logger = logger;
         }
@@ -27,31 +29,29 @@ namespace Andead.CameraBot
             _logger.LogInformation("Starting bot");
             _logger.LogInformation("Testing {MessengerType}", _messenger.GetType().FullName);
 
-            bool testOk = await _messenger.Test(cancellationToken);
+            bool testOk = await _messenger.Test(cancellationToken).ConfigureAwait(false);
             if (!testOk)
             {
                 _logger.LogWarning("Messenger test failed.");
                 return;
             }
-            
+
             _logger.LogInformation("Messenger test successful.");
 
             _messenger.SnapshotRequested += MessengerOnSnapshotRequested;
-            _messenger.StartReceiving(cancellationToken);
+            await _messenger.Start(cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Bot started.");
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Stopping bot");
 
-            _messenger.StopReceiving(cancellationToken);
+            await _messenger.Stop(cancellationToken).ConfigureAwait(false);
             _messenger.SnapshotRequested -= MessengerOnSnapshotRequested;
 
             _logger.LogInformation("Bot stopped.");
-
-            return Task.CompletedTask;
         }
 
         private void MessengerOnSnapshotRequested(object sender, SnapshotRequestedEventArgs e)
@@ -73,16 +73,20 @@ namespace Andead.CameraBot
 
         public async Task Handle(ISnapshotRequest request, CancellationToken cancellationToken)
         {
-            IEnumerable<string> cameraIds = await _cameraService.GetAvailableCameraNames();
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            var cameraService = scope.ServiceProvider.GetService<ICameraService>();
 
-            using Snapshot snapshot = await _cameraService.GetSnapshot(request.Text);
-            if (snapshot == null)
+            IEnumerable<string> cameraNames = (await cameraService.GetNames()
+                .ConfigureAwait(false)).ToList();
+
+            if (cameraNames.Any(request.Text.Equals))
             {
-                await _messenger.SendGreeting(request, cameraIds, cancellationToken);
+                using Snapshot snapshot = await cameraService.GetSnapshot(request.Text).ConfigureAwait(false);
+                await _messenger.SendSnapshot(snapshot, request, cameraNames, cancellationToken).ConfigureAwait(false);
                 return;
             }
 
-            await _messenger.SendSnapshot(snapshot, request, cameraIds, cancellationToken);
+            await _messenger.SendGreeting(request, cameraNames, cancellationToken).ConfigureAwait(false);
         }
     }
 }

@@ -21,22 +21,15 @@ namespace Andead.CameraBot.Media
             _client = new HttpClient();
         }
 
-        public Task<IEnumerable<string>> GetAvailableCameraNames()
+        public Task<IEnumerable<string>> GetNames()
         {
             return Task.FromResult(_options.Value.Cameras.Values.Select(value => value.Name));
         }
 
         public Task<Snapshot> GetSnapshot(string cameraName)
         {
-            CameraOptions camera = _options.Value.Cameras.Values
-                .FirstOrDefault(c => string.Equals(cameraName, c.Name, StringComparison.OrdinalIgnoreCase));
-            if (camera == null)
-            {
-                _logger.LogWarning("Camera with name {CameraName} was not found.", cameraName);
-                return Task.FromResult<Snapshot>(null);
-            }
-
-            return GetSnapshotInternal(camera);
+            return GetSnapshotInternal(_options.Value.Cameras.Values.Single(options =>
+                string.Equals(options.Name, cameraName, StringComparison.OrdinalIgnoreCase)));
         }
 
         private async Task<Snapshot> GetSnapshotInternal(CameraOptions camera)
@@ -47,7 +40,7 @@ namespace Andead.CameraBot.Media
                 {
                     CameraName = camera.Name,
                     CameraUrl = camera.Url,
-                    Stream = await _client.GetStreamAsync(camera.SnapshotUrl)
+                    Stream = await _client.GetStreamAsync(camera.SnapshotUrl).ConfigureAwait(false)
                 };
             }
             catch (TaskCanceledException)
@@ -58,8 +51,8 @@ namespace Andead.CameraBot.Media
             {
                 _logger.LogError(exception, "Error getting snapshot from {@Camera}.", camera);
             }
-
-            return null;
+            
+            return Snapshot.Error("Oops. Something went wrong.");
         }
     }
 }

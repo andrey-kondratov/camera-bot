@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Andead.CameraBot.Media;
 using Andead.CameraBot.Messaging;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MihaZupan;
 using MoreLinq;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
@@ -25,9 +28,8 @@ namespace Andead.CameraBot.Telegram
         private readonly TelegramBotClient _client;
         private readonly ILogger<Messenger> _logger;
         private readonly IOptions<TelegramOptions> _options;
+        private readonly Uri _webhookUri;
         private CancellationToken _cancellationToken;
-
-        private bool _isReceiving;
 
         public Messenger(IOptions<TelegramOptions> options, ILogger<Messenger> logger)
         {
@@ -45,52 +47,73 @@ namespace Andead.CameraBot.Telegram
 
             _options = options;
             _logger = logger;
+
+            Uri.TryCreate(_options.Value.Webhook.Url, UriKind.Absolute, out _webhookUri);
         }
 
-        public void StartReceiving(CancellationToken cancellationToken)
+        public async Task Start(CancellationToken cancellationToken = default)
         {
-            if (_isReceiving)
-            {
-                throw new InvalidOperationException("Already receiving. Stop me first.");
-            }
-
-            _isReceiving = true;
             _cancellationToken = cancellationToken;
 
-            _client.StartReceiving(AllowedUpdates, cancellationToken);
-            _client.OnMessage += OnMessage;
+            if (_webhookUri != null)
+            {
+                await _client.SetWebhookAsync(_webhookUri.ToString(), allowedUpdates: AllowedUpdates,
+                    cancellationToken: cancellationToken);
 
-            _logger.LogInformation("Started receiving updates");
+                _logger.LogInformation("Webhook setup complete");
+            }
+            else
+            {
+                await _client.DeleteWebhookAsync(cancellationToken);
+
+                _client.StartReceiving(AllowedUpdates, cancellationToken);
+                _client.OnMessage += OnMessage;
+
+                _logger.LogInformation("Started receiving updates");
+            }
         }
 
-        public void StopReceiving(CancellationToken cancellationToken)
+        public Task Stop(CancellationToken cancellationToken = default)
         {
-            _client.OnMessage -= OnMessage;
-            _client.StopReceiving();
+            if (_client.IsReceiving)
+            {
+                _client.OnMessage -= OnMessage;
+                _client.StopReceiving();
+                _logger.LogInformation("Stopped receiving updates");
+            }
 
-            _isReceiving = false;
-            _logger.LogInformation("Stopped receiving updates");
+            return Task.CompletedTask;
         }
 
         public async Task SendSnapshot(Snapshot snapshot, ISnapshotRequest request, IEnumerable<string> cameraNames,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default)
         {
-            var photo = new InputOnlineFile(snapshot.Stream);
-            string caption = GetCaptionMarkdown(snapshot);
             IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
+            Message message;
+            if (!snapshot.Success)
+            {
+                message = await _client.SendTextMessageAsync(((SnapshotRequest) request).ChatId,
+                    snapshot.Message, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
+            }
+            else
+            {
+                var photo = new InputOnlineFile(snapshot.Stream);
+                string caption = GetCaptionMarkdown(snapshot);
 
-            Message message = await _client.SendPhotoAsync(((SnapshotRequest) request).ChatId, photo, caption,
-                ParseMode.Markdown, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
+                message = await _client.SendPhotoAsync(((SnapshotRequest) request).ChatId, photo, caption,
+                    ParseMode.Markdown, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
+            }
+
             _logger.LogInformation("Responded with message {@Message} to request {@SnapshotRequest}", message, request);
         }
 
-        public Task<bool> Test(CancellationToken cancellationToken)
+        public Task<bool> Test(CancellationToken cancellationToken = default)
         {
             return _client.TestApiAsync(cancellationToken);
         }
 
         public async Task SendGreeting(ISnapshotRequest request, IEnumerable<string> cameraNames,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default)
         {
             IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
             Message message = await _client.SendTextMessageAsync(((SnapshotRequest) request).ChatId,
@@ -102,6 +125,52 @@ namespace Andead.CameraBot.Telegram
 
         public event EventHandler<SnapshotRequestedEventArgs> SnapshotRequested;
 
+        public Task Handle(IncomingRequest request, CancellationToken cancellationToken = default)
+        {
+            HttpRequest httpRequest = request.HttpRequest;
+            if (httpRequest.Method == HttpMethods.Post && httpRequest.IsHttps &&
+                _webhookUri.Host == httpRequest.Host.Value &&
+                _webhookUri.AbsolutePath == httpRequest.Path.Value)
+            {
+                return TryHandleInternal(request, cancellationToken);
+            }
+
+            _logger.LogDebug("Invalid request headers: {Method}, {IsHttps}, {Host}, {Path}", httpRequest.Method,
+                httpRequest.IsHttps, httpRequest.Host.Value, httpRequest.Path.Value);
+            return Task.CompletedTask;
+        }
+
+        private async Task TryHandleInternal(IncomingRequest request, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(request.HttpRequest.Body);
+            string payload = await reader.ReadToEndAsync();
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Update update;
+            try
+            {
+                update = JsonConvert.DeserializeObject<Update>(payload);
+            }
+            catch (JsonException exception)
+            {
+                _logger.LogError(exception, "Failed to deserialize payload");
+                return;
+            }
+            
+            request.Handled = true;
+
+            if (!TryCreateSnapshotRequest(update.Message, out SnapshotRequest snapshotRequest))
+            {
+                return;
+            }
+
+            var args = new SnapshotRequestedEventArgs(snapshotRequest, cancellationToken);
+            EventHandler<SnapshotRequestedEventArgs> handler = SnapshotRequested;
+
+            handler?.Invoke(this, args);
+        }
+
         private void OnMessage(object sender, MessageEventArgs e)
         {
             if (!TryCreateSnapshotRequest(e.Message, out SnapshotRequest snapshotRequest))
@@ -109,8 +178,10 @@ namespace Andead.CameraBot.Telegram
                 return;
             }
 
+            var args = new SnapshotRequestedEventArgs(snapshotRequest, _cancellationToken);
             EventHandler<SnapshotRequestedEventArgs> handler = SnapshotRequested;
-            handler?.Invoke(this, new SnapshotRequestedEventArgs(snapshotRequest, _cancellationToken));
+
+            handler?.Invoke(this, args);
         }
 
         private bool TryCreateSnapshotRequest(Message message, out SnapshotRequest snapshotRequest)

@@ -43,6 +43,7 @@ namespace Andead.CameraBot.Server
             }
 
             app.UseSerilogRequestLogging();
+            app.UseCameraBot();
         }
     }
 }
