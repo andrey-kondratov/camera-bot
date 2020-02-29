@@ -34,7 +34,6 @@ namespace Andead.CameraBot.Server
         private static LoggerConfiguration CreateLoggerConfiguration()
         {
             LoggerConfiguration configuration = new LoggerConfiguration()
-                .MinimumLevel.Information()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Environment", Env.Name)
@@ -46,8 +45,12 @@ namespace Andead.CameraBot.Server
                 }, true);
 
             configuration = Env.IsDevelopment
-                ? configuration.WriteTo.Console()
-                : configuration.WriteTo.Console(new JsonFormatter());
+                ? configuration
+                    .MinimumLevel.Debug()
+                    .WriteTo.Console()
+                : configuration
+                    .MinimumLevel.Information()
+                    .WriteTo.Console(new JsonFormatter());
 
             return configuration;
         }
