@@ -14,7 +14,8 @@ namespace Andead.CameraBot.Server
         {
             IConfigurationBuilder builder = new ConfigurationBuilder()
                 .SetBasePath(environment.ContentRootPath)
-                .AddJsonFile("appsettings.json", false, true)
+                .AddJsonFile("appsettings.json", true, true)
+                .AddJsonFile($"appsettings.{Env.Name}.json", true, true)
                 .AddEnvironmentVariables();
 
             if (environment.IsDevelopment())

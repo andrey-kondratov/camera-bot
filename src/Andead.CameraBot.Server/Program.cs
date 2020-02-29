@@ -4,6 +4,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Serilog;
 using Serilog.Events;
+using Serilog.Formatting.Json;
 
 namespace Andead.CameraBot.Server
 {
@@ -11,22 +12,7 @@ namespace Andead.CameraBot.Server
     {
         public static int Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                .Enrich.FromLogContext()
-                .Enrich.WithProperty("Version", new
-                {
-                    Bot = typeof(CameraBotOptions).Assembly.GetName().Version.ToString(3),
-                    Telegram = typeof(TelegramOptions).Assembly.GetName().Version.ToString(3),
-                    Server = typeof(Program).Assembly.GetName().Version.ToString(3)
-                }, true)
-                .WriteTo.Console(
-#if !DEBUG
-                    new Serilog.Formatting.Json.JsonFormatter()
-#endif
-                )
-                .CreateLogger();
+            Log.Logger = CreateLoggerConfiguration().CreateLogger();
 
             try
             {
@@ -45,10 +31,33 @@ namespace Andead.CameraBot.Server
             }
         }
 
+        private static LoggerConfiguration CreateLoggerConfiguration()
+        {
+            LoggerConfiguration configuration = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Environment", Env.Name)
+                .Enrich.WithProperty("Version", new
+                {
+                    Bot = typeof(CameraBotOptions).Assembly.GetName().Version.ToString(3),
+                    Telegram = typeof(TelegramOptions).Assembly.GetName().Version.ToString(3),
+                    Server = typeof(Program).Assembly.GetName().Version.ToString(3)
+                }, true);
+
+            if (Env.IsDevelopment)
+            {
+                configuration = configuration
+                    .WriteTo.Console(new JsonFormatter());
+            }
+
+            return configuration;
+        }
+
         public static IWebHostBuilder CreateHostBuilder(string[] args)
         {
             return WebHost.CreateDefaultBuilder<Startup>(args)
-                .UseKestrel(options => options.ListenAnyIP(int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "443")))
+                .UseKestrel(options => options.ListenAnyIP(Env.Port))
                 .UseSerilog();
         }
     }
