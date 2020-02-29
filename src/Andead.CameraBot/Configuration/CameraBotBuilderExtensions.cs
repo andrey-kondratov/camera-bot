@@ -10,7 +10,7 @@ namespace Andead.CameraBot
         {
             builder.Services.AddOptions();
             builder.Services.AddTransient<ICameraService, CameraService>();
-            builder.Services.AddHostedService<Worker>();
+            builder.Services.AddHostedService<BotService>();
 
             return builder;
         }
@@ -18,7 +18,7 @@ namespace Andead.CameraBot
         public static ICameraBotBuilder AddMessenger<TMessenger>(this ICameraBotBuilder builder)
             where TMessenger : class, IMessenger
         {
-            builder.Services.AddTransient<IMessenger, TMessenger>();
+            builder.Services.AddSingleton<IMessenger, TMessenger>();
             return builder;
         }
     }

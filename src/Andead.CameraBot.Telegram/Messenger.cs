@@ -1,16 +1,20 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using MihaZupan;
-using MoreLinq;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Andead.CameraBot.Media;
 using Andead.CameraBot.Messaging;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MihaZupan;
+using MoreLinq;
+using Newtonsoft.Json;
 using Telegram.Bot;
+using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
@@ -20,14 +24,14 @@ namespace Andead.CameraBot.Telegram
 {
     public class Messenger : IMessenger
     {
-        private readonly IEnumerable<UpdateType> _allowedUpdates = new[] { UpdateType.Message };
+        private static readonly UpdateType[] AllowedUpdates = {UpdateType.Message};
         private readonly TelegramBotClient _client;
-        private readonly IOptions<CameraBotOptions> _botOptions;
-        private readonly IOptions<TelegramOptions> _options;
         private readonly ILogger<Messenger> _logger;
-        private int _lastUpdateId;
+        private readonly IOptions<TelegramOptions> _options;
+        private readonly Uri _webhookUri;
+        private CancellationToken _cancellationToken;
 
-        public Messenger(IOptions<CameraBotOptions> botOptions, IOptions<TelegramOptions> options, ILogger<Messenger> logger)
+        public Messenger(IOptions<TelegramOptions> options, ILogger<Messenger> logger)
         {
             Socks5Options socks5Options = options.Value.Socks5;
 
@@ -41,132 +45,165 @@ namespace Andead.CameraBot.Telegram
                 _client = new TelegramBotClient(options.Value.ApiToken);
             }
 
-            _botOptions = botOptions;
             _options = options;
             _logger = logger;
+
+            Uri.TryCreate(_options.Value.Webhook.Url, UriKind.Absolute, out _webhookUri);
         }
 
-        public async Task<SnapshotRequest> GetSnapshotRequest(CancellationToken cancellationToken)
+        public async Task Start(CancellationToken cancellationToken = default)
         {
-            int timeout = _options.Value.Updates.Timeout;
-            string[] allowedUsernames = _options.Value.AllowedUsernames;
+            _cancellationToken = cancellationToken;
 
-            while (!cancellationToken.IsCancellationRequested)
+            if (_webhookUri != null)
             {
-                int offset = _lastUpdateId + 1;
+                await _client.SetWebhookAsync(_webhookUri.ToString(), allowedUpdates: AllowedUpdates,
+                    cancellationToken: cancellationToken);
 
-                Update[] updates;
-                try
-                {
-                    updates = await _client.GetUpdatesAsync(offset, 1, timeout, _allowedUpdates, cancellationToken);
-                }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogError(exception, "Error getting updates for offset {Offset}, timeout {Timeout}", offset, timeout);
-                    break;
-                }
+                _logger.LogInformation("Webhook setup complete");
+            }
+            else
+            {
+                await _client.DeleteWebhookAsync(cancellationToken);
 
-                if (!updates.Any())
-                {
-                    _logger.LogDebug("No updates yet.");
-                    break;
-                }
+                _client.StartReceiving(AllowedUpdates, cancellationToken);
+                _client.OnMessage += OnMessage;
 
-                Update update = updates[0];
-                Message message = update.Message;
-                _lastUpdateId = update.Id;
+                _logger.LogInformation("Started receiving updates");
+            }
+        }
 
-                string username = message.Chat.Username;
-                if (!allowedUsernames.Any() || allowedUsernames.Contains(username))
-                {
-                    long chatId = message.Chat.Id;
-                    string text = message.Text;
-
-                    _logger.LogInformation("Snapshot request received, chat id: {ChatId}, message: {@Message}", chatId, message);
-                    return new SnapshotRequest { Text = text, ChatId = chatId };
-                }
-
-                _logger.LogWarning("Message {@Message} discarded after comparing with allowed usernames {@AllowedUsernames}.",
-                    message, allowedUsernames);
-
-                await Task.Delay(timeout, cancellationToken);
+        public Task Stop(CancellationToken cancellationToken = default)
+        {
+            if (_client.IsReceiving)
+            {
+                _client.OnMessage -= OnMessage;
+                _client.StopReceiving();
+                _logger.LogInformation("Stopped receiving updates");
             }
 
-            return null;
+            return Task.CompletedTask;
         }
 
-        public async Task SendSnapshot(Snapshot snapshot, long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken)
+        public async Task SendSnapshot(Snapshot snapshot, ISnapshotRequest request, IEnumerable<string> cameraNames,
+            CancellationToken cancellationToken = default)
         {
-            try
+            IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
+            Message message;
+            if (!snapshot.Success)
+            {
+                message = await _client.SendTextMessageAsync(((SnapshotRequest) request).ChatId,
+                    snapshot.Message, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
+            }
+            else
             {
                 var photo = new InputOnlineFile(snapshot.Stream);
                 string caption = GetCaptionMarkdown(snapshot);
-                IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
 
-                Message message = await _client.SendPhotoAsync(chatId, photo, caption, ParseMode.Markdown, 
-                    replyMarkup: replyMarkup, cancellationToken: cancellationToken);
-                _logger.LogInformation("Snapshot sent to chat {ChatId}: {@Message}", chatId, message);
+                message = await _client.SendPhotoAsync(((SnapshotRequest) request).ChatId, photo, caption,
+                    ParseMode.Markdown, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
             }
-            catch (TaskCanceledException)
-            {
-                // ignored
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Error sending snapshot to chat {ChatId}", chatId);
-            }
+
+            _logger.LogInformation("Responded with message {@Message} to request {@SnapshotRequest}", message, request);
         }
 
-        public async Task<bool> Test(CancellationToken cancellationToken)
+        public Task<bool> Test(CancellationToken cancellationToken = default)
         {
+            return _client.TestApiAsync(cancellationToken);
+        }
+
+        public async Task SendGreeting(ISnapshotRequest request, IEnumerable<string> cameraNames,
+            CancellationToken cancellationToken = default)
+        {
+            IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
+            Message message = await _client.SendTextMessageAsync(((SnapshotRequest) request).ChatId,
+                "Send the camera name, I'll send a photo from it. ",
+                replyMarkup: replyMarkup, cancellationToken: cancellationToken);
+            _logger.LogInformation("Responded with greeting message {@Message} to request {@SnapshotRequest}", message,
+                request);
+        }
+
+        public event EventHandler<SnapshotRequestedEventArgs> SnapshotRequested;
+
+        public Task Handle(IncomingRequest request, CancellationToken cancellationToken = default)
+        {
+            HttpRequest httpRequest = request.HttpRequest;
+            if (httpRequest.Method == HttpMethods.Post && 
+                _webhookUri.Host == httpRequest.Host.Value &&
+                _webhookUri.AbsolutePath == httpRequest.Path.Value)
+            {
+                return TryHandleInternal(request, cancellationToken);
+            }
+
+            _logger.LogDebug("Invalid request headers: {Method}, {Host}, {Path}", httpRequest.Method,
+                httpRequest.IsHttps, httpRequest.Host.Value, httpRequest.Path.Value);
+            return Task.CompletedTask;
+        }
+
+        private async Task TryHandleInternal(IncomingRequest request, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(request.HttpRequest.Body);
+            string payload = await reader.ReadToEndAsync();
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Update update;
             try
             {
-                bool result = await _client.TestApiAsync(cancellationToken);
-
-                if (!result)
-                {
-                    _logger.LogError("API test failed");
-                }
-                else
-                {
-                    _logger.LogInformation("API test successful");
-                }
-
-                return result;
+                update = JsonConvert.DeserializeObject<Update>(payload);
             }
-            catch (TaskCanceledException)
+            catch (JsonException exception)
             {
-                // ignored
+                _logger.LogError(exception, "Failed to deserialize payload");
+                return;
             }
-            catch (Exception exception)
+            
+            request.Handled = true;
+
+            if (!TryCreateSnapshotRequest(update.Message, out SnapshotRequest snapshotRequest))
             {
-                _logger.LogError(exception, "Error during API test");
+                return;
             }
 
+            var args = new SnapshotRequestedEventArgs(snapshotRequest, cancellationToken);
+            EventHandler<SnapshotRequestedEventArgs> handler = SnapshotRequested;
+
+            handler?.Invoke(this, args);
+        }
+
+        private void OnMessage(object sender, MessageEventArgs e)
+        {
+            if (!TryCreateSnapshotRequest(e.Message, out SnapshotRequest snapshotRequest))
+            {
+                return;
+            }
+
+            var args = new SnapshotRequestedEventArgs(snapshotRequest, _cancellationToken);
+            EventHandler<SnapshotRequestedEventArgs> handler = SnapshotRequested;
+
+            handler?.Invoke(this, args);
+        }
+
+        private bool TryCreateSnapshotRequest(Message message, out SnapshotRequest snapshotRequest)
+        {
+            string username = message.Chat.Username;
+            string[] allowedUsernames = _options.Value.AllowedUsernames;
+            if (!allowedUsernames.Any() || allowedUsernames.Contains(username))
+            {
+                long chatId = message.Chat.Id;
+                string text = message.Text;
+
+                _logger.LogInformation("Snapshot request received, chat id: {ChatId}, message: {@Message}", chatId,
+                    message);
+                snapshotRequest = new SnapshotRequest {Text = text, ChatId = chatId};
+                return true;
+            }
+
+            _logger.LogWarning(
+                "Message {@Message} discarded after comparing with allowed usernames {@AllowedUsernames}.",
+                message, allowedUsernames);
+            snapshotRequest = null;
             return false;
-        }
-
-        public async Task SendGreeting(long chatId, IEnumerable<string> cameraNames, CancellationToken cancellationToken)
-        {
-            try
-            {
-                IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
-                Message message = await _client.SendTextMessageAsync(chatId, "Send the camera name, I'll send a photo from it. ",
-                    replyMarkup: replyMarkup, cancellationToken: cancellationToken);
-                _logger.LogInformation("Sent greeting to chat {chatId}: {@Message}", chatId, message);
-            }
-            catch (TaskCanceledException)
-            {
-                // ignored
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Error sending greeting to chat {ChatId}", chatId);
-            }
         }
 
         private static IReplyMarkup GetReplyMarkup(IEnumerable<string> cameraNames)
@@ -189,8 +226,8 @@ namespace Andead.CameraBot.Telegram
         {
             var builder = new StringBuilder();
 
-            DateTime taken = snapshot.TakenUtc.AddHours(_botOptions.Value.HoursOffset);
-            builder.AppendFormat($"{{0:{_botOptions.Value.DateTimeFormat}}}", taken);
+            DateTime taken = snapshot.TakenUtc.AddHours(_options.Value.HoursOffset);
+            builder.AppendFormat($"{{0:{_options.Value.DateTimeFormat}}}", taken);
             builder.AppendFormat(": {0}", snapshot.CameraName);
             if (!string.IsNullOrEmpty(snapshot.CameraUrl))
             {

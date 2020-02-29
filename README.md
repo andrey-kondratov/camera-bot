@@ -6,7 +6,7 @@
 
 # Camera bot
 
-A bot that responds to private messages with snapshots from webcams. 
+A bot for HTTP web cameras snapshots.
 
 ## Supported messengers
 
@@ -14,7 +14,7 @@ Currently supports Telegram only.
 
 ## How it works
 
-Can be run in Docker or as a standalone app. Uses long-polling to get updates from the messenger, so no external IP is needed. 
+Can be run in Docker or as a standalone app. Uses long-polling or webhooks to get updates from the messenger. 
 
 1. A user sends a message to the bot.
 2. If the message is not a camera name, the bot sends a list of valid camera names.
@@ -26,7 +26,7 @@ Can be run in Docker or as a standalone app. Uses long-polling to get updates fr
 docker run kondranazzo/camera-bot \
   -e Bot__Telegram__ApiToken=123456789:ABCDEFGH \
   -e Bot__Cameras__garden__Name=Garden \
-  -e Bot__Cameras__garden__SnapshotUrl=http://12.34.56.78/snapshot.jpg
+  -e Bot__Cameras__garden__SnapshotUrl=http://12.34.56.78/snapshot.jpg \
   -e Bot__Cameras__garden__Url=http://12.34.56.78/video.html # optional, used only as an external link in captions
 ```
 
@@ -38,3 +38,6 @@ Set `Bot__Telegram__Socks5__Hostname` and `Bot__Telegram__Socks5__Port` environm
 
 Set `Bot__Telegram__AllowedUsernames__0` to the first username, `Bot__Telegram__AllowedUsernames__1` to the second, and so on.
 
+### Webhooks
+
+Set `Bot__Telegram__Webhook__Url` to the webhook URL. 

@@ -6,6 +6,6 @@ namespace Andead.CameraBot.Media
     public interface ICameraService
     {
         Task<Snapshot> GetSnapshot(string cameraName);
-        Task<IEnumerable<string>> GetAvailableCameraNames();
+        Task<IEnumerable<string>> GetNames();
     }
 }

@@ -1,38 +1,23 @@
 using System;
-using System.IO;
-using System.Reflection;
-using Andead.CameraBot.Messaging;
 using Andead.CameraBot.Telegram;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
 using Serilog;
 using Serilog.Events;
-using Serilog.Formatting.Compact;
+using Serilog.Formatting.Json;
 
 namespace Andead.CameraBot.Server
 {
     public static class Program
     {
-        public static int Main()
+        public static int Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                .Enrich.FromLogContext()
-                .Enrich.WithProperty("Version", new
-                {
-                    Bot = typeof(IMessenger).Assembly.GetName().Version.ToString(3),
-                    Telegram = typeof(Messenger).Assembly.GetName().Version.ToString(3),
-                    Server = typeof(Program).Assembly.GetName().Version.ToString(3)
-                }, true)
-                .WriteTo.Console(new RenderedCompactJsonFormatter())
-                .CreateLogger();
+            Log.Logger = CreateLoggerConfiguration().CreateLogger();
 
             try
             {
                 Log.Information("Starting host");
-                CreateHostBuilder().Build().Run();
+                CreateHostBuilder(args).Build().Run();
                 return 0;
             }
             catch (Exception ex)
@@ -46,47 +31,35 @@ namespace Andead.CameraBot.Server
             }
         }
 
-        public static IHostBuilder CreateHostBuilder()
+        private static LoggerConfiguration CreateLoggerConfiguration()
         {
-            var builder = new HostBuilder();
-
-            builder.UseContentRoot(Directory.GetCurrentDirectory());
-            builder.ConfigureHostConfiguration(config => config.AddEnvironmentVariables("DOTNET_"));
-
-            builder.ConfigureAppConfiguration((hostingContext, config) =>
+            LoggerConfiguration configuration = new LoggerConfiguration()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Environment", Env.Name)
+                .Enrich.WithProperty("Version", new
                 {
-                    IHostEnvironment env = hostingContext.HostingEnvironment;
+                    Bot = typeof(CameraBotOptions).Assembly.GetName().Version.ToString(3),
+                    Telegram = typeof(TelegramOptions).Assembly.GetName().Version.ToString(3),
+                    Server = typeof(Program).Assembly.GetName().Version.ToString(3)
+                }, true);
 
-                    config.AddJsonFile("appsettings.json", true, true)
-                        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true);
+            configuration = Env.IsDevelopment
+                ? configuration
+                    .MinimumLevel.Debug()
+                    .WriteTo.Console()
+                : configuration
+                    .MinimumLevel.Information()
+                    .WriteTo.Console(new JsonFormatter());
 
-                    if (env.IsDevelopment() && !string.IsNullOrEmpty(env.ApplicationName))
-                    {
-                        Assembly appAssembly = Assembly.Load(new AssemblyName(env.ApplicationName));
-                        config.AddUserSecrets(appAssembly, true);
-                    }
+            return configuration;
+        }
 
-                    config.AddEnvironmentVariables();
-                })
-                .UseDefaultServiceProvider((context, options) =>
-                {
-                    bool isDevelopment = context.HostingEnvironment.IsDevelopment();
-                    options.ValidateScopes = isDevelopment;
-                    options.ValidateOnBuild = isDevelopment;
-                });
-
-            builder.ConfigureServices((hostContext, services) =>
-            {
-                services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
-
-                IConfiguration configuration = hostContext.Configuration;
-
-                services
-                    .AddCameraBot(configuration.GetSection("Bot"))
-                    .AddTelegram(configuration.GetSection("Bot:Telegram"));
-            });
-
-            return builder;
+        public static IWebHostBuilder CreateHostBuilder(string[] args)
+        {
+            return WebHost.CreateDefaultBuilder<Startup>(args)
+                .UseKestrel(options => options.ListenAnyIP(Env.Port))
+                .UseSerilog();
         }
     }
 }
