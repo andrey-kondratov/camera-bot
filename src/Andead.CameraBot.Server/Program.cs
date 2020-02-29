@@ -45,11 +45,9 @@ namespace Andead.CameraBot.Server
                     Server = typeof(Program).Assembly.GetName().Version.ToString(3)
                 }, true);
 
-            if (!Env.IsDevelopment)
-            {
-                configuration = configuration
-                    .WriteTo.Console(new JsonFormatter());
-            }
+            configuration = Env.IsDevelopment
+                ? configuration.WriteTo.Console()
+                : configuration.WriteTo.Console(new JsonFormatter());
 
             return configuration;
         }
