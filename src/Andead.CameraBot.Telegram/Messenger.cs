@@ -128,14 +128,14 @@ namespace Andead.CameraBot.Telegram
         public Task Handle(IncomingRequest request, CancellationToken cancellationToken = default)
         {
             HttpRequest httpRequest = request.HttpRequest;
-            if (httpRequest.Method == HttpMethods.Post && httpRequest.IsHttps &&
+            if (httpRequest.Method == HttpMethods.Post && 
                 _webhookUri.Host == httpRequest.Host.Value &&
                 _webhookUri.AbsolutePath == httpRequest.Path.Value)
             {
                 return TryHandleInternal(request, cancellationToken);
             }
 
-            _logger.LogDebug("Invalid request headers: {Method}, {IsHttps}, {Host}, {Path}", httpRequest.Method,
+            _logger.LogDebug("Invalid request headers: {Method}, {Host}, {Path}", httpRequest.Method,
                 httpRequest.IsHttps, httpRequest.Host.Value, httpRequest.Path.Value);
             return Task.CompletedTask;
         }
