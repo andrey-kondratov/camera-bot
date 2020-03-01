@@ -24,6 +24,7 @@ namespace Andead.CameraBot.Telegram
 {
     public class Messenger : IMessenger
     {
+        private const int ReplyKeyboardWidth = 3;
         private static readonly UpdateType[] AllowedUpdates = {UpdateType.Message};
         private readonly TelegramBotClient _client;
         private readonly ILogger<Messenger> _logger;
@@ -88,10 +89,11 @@ namespace Andead.CameraBot.Telegram
         public async Task SendSnapshot(Snapshot snapshot, ISnapshotRequest request, IEnumerable<string> cameraNames,
             CancellationToken cancellationToken = default)
         {
-            IReplyMarkup replyMarkup = GetReplyMarkup(cameraNames);
+            IReplyMarkup replyMarkup;
             Message message;
             if (!snapshot.Success)
             {
+                replyMarkup = GetReplyMarkup(cameraNames);
                 message = await _client.SendTextMessageAsync(((SnapshotRequest) request).ChatId,
                     snapshot.Message, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
             }
@@ -99,6 +101,7 @@ namespace Andead.CameraBot.Telegram
             {
                 var photo = new InputOnlineFile(snapshot.Stream);
                 string caption = GetCaptionMarkdown(snapshot);
+                replyMarkup = GetReplyMarkup(snapshot);
 
                 message = await _client.SendPhotoAsync(((SnapshotRequest) request).ChatId, photo, caption,
                     ParseMode.Markdown, replyMarkup: replyMarkup, cancellationToken: cancellationToken);
@@ -128,7 +131,7 @@ namespace Andead.CameraBot.Telegram
         public Task Handle(IncomingRequest request, CancellationToken cancellationToken = default)
         {
             HttpRequest httpRequest = request.HttpRequest;
-            if (httpRequest.Method == HttpMethods.Post && 
+            if (httpRequest.Method == HttpMethods.Post &&
                 _webhookUri.Host == httpRequest.Host.Value &&
                 _webhookUri.AbsolutePath == httpRequest.Path.Value)
             {
@@ -157,7 +160,7 @@ namespace Andead.CameraBot.Telegram
                 _logger.LogError(exception, "Failed to deserialize payload");
                 return;
             }
-            
+
             request.Handled = true;
 
             if (!TryCreateSnapshotRequest(update.Message, out SnapshotRequest snapshotRequest))
@@ -208,18 +211,37 @@ namespace Andead.CameraBot.Telegram
 
         private static IReplyMarkup GetReplyMarkup(IEnumerable<string> cameraNames)
         {
+            IList<string> source = cameraNames as IList<string> ?? cameraNames.ToList();
             IEnumerable<IEnumerable<KeyboardButton>> GetKeyboard()
             {
-                foreach (IEnumerable<string> row in cameraNames.Batch(3))
+                foreach (IEnumerable<string> row in source.Batch(ReplyKeyboardWidth))
                 {
                     yield return row.Select(id => new KeyboardButton(id));
                 }
             }
 
             IEnumerable<IEnumerable<KeyboardButton>> keyboard = GetKeyboard();
-            var markup = new ReplyKeyboardMarkup(keyboard);
+            var markup = new ReplyKeyboardMarkup(keyboard, oneTimeKeyboard: true,
+                resizeKeyboard: source.Count <= ReplyKeyboardWidth);
 
             return markup;
+        }
+
+        private static IReplyMarkup GetReplyMarkup(Snapshot snapshot)
+        {
+            var row = new List<InlineKeyboardButton>();
+            if (!string.IsNullOrEmpty(snapshot.CameraUrl))
+            {
+                row.Add(new InlineKeyboardButton
+                {
+                    Text = "Watch live",
+                    CallbackData = snapshot.CameraUrl,
+                    Url = snapshot.CameraUrl
+                });
+            }
+
+            IReplyMarkup replyMarkup = new InlineKeyboardMarkup(row);
+            return replyMarkup;
         }
 
         private string GetCaptionMarkdown(Snapshot snapshot)
@@ -227,12 +249,8 @@ namespace Andead.CameraBot.Telegram
             var builder = new StringBuilder();
 
             DateTime taken = snapshot.TakenUtc.AddHours(_options.Value.HoursOffset);
+            builder.AppendFormat("*{0}*, ", snapshot.CameraName);
             builder.AppendFormat($"{{0:{_options.Value.DateTimeFormat}}}", taken);
-            builder.AppendFormat(": {0}", snapshot.CameraName);
-            if (!string.IsNullOrEmpty(snapshot.CameraUrl))
-            {
-                builder.AppendFormat(". [Watch live]({0})", snapshot.CameraUrl);
-            }
 
             return builder.ToString();
         }
