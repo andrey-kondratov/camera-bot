@@ -221,8 +221,7 @@ namespace Andead.CameraBot.Telegram
             }
 
             IEnumerable<IEnumerable<KeyboardButton>> keyboard = GetKeyboard();
-            var markup = new ReplyKeyboardMarkup(keyboard, oneTimeKeyboard: true,
-                resizeKeyboard: source.Count <= ReplyKeyboardWidth);
+            var markup = new ReplyKeyboardMarkup(keyboard, source.Count <= ReplyKeyboardWidth);
 
             return markup;
         }
