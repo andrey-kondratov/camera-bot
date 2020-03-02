@@ -40,4 +40,9 @@ Set `Bot__Telegram__AllowedUsernames__0` to the first username, `Bot__Telegram__
 
 ### Webhooks
 
-Set `Bot__Telegram__Webhook__Url` to the webhook URL. 
+Set `Bot__Telegram__Webhook__Url` to the webhook URL. If omitted, long-polling is used.
+
+### Errors handling policy
+
+- `Bot__RetryCount` sets the number of times to retry downloading a snapshot, default is 3
+- `Bot__TimeoutMilliseconds` sets the max number in milliseconds for the snapshot downloading to complete
