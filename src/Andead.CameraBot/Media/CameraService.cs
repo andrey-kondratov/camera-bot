@@ -10,15 +10,15 @@ namespace Andead.CameraBot.Media
 {
     internal class CameraService : ICameraService
     {
-        private readonly IOptions<CameraBotOptions> _options;
-        private readonly ILogger<CameraService> _logger;
         private readonly HttpClient _client;
+        private readonly ILogger<CameraService> _logger;
+        private readonly IOptions<CameraBotOptions> _options;
 
-        public CameraService(IOptions<CameraBotOptions> options, ILogger<CameraService> logger)
+        public CameraService(HttpClient client, IOptions<CameraBotOptions> options, ILogger<CameraService> logger)
         {
+            _client = client;
             _options = options;
             _logger = logger;
-            _client = new HttpClient();
         }
 
         public Task<IEnumerable<string>> GetNames()
@@ -51,7 +51,7 @@ namespace Andead.CameraBot.Media
             {
                 _logger.LogError(exception, "Error getting snapshot from {@Camera}.", camera);
             }
-            
+
             return Snapshot.Error("Oops. Something went wrong.");
         }
     }

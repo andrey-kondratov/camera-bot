@@ -13,7 +13,13 @@ namespace Andead.CameraBot
 
         public static ICameraBotBuilder AddCameraBot(this IServiceCollection services)
         {
-            return services.AddCameraBotBuilder().AddCoreServices();
+            ICameraBotBuilder builder = services.AddCameraBotBuilder();
+            
+            builder
+                .AddCoreServices()
+                .AddHttpClient();
+
+            return builder;
         }
 
         public static ICameraBotBuilder AddCameraBot(this IServiceCollection services,
