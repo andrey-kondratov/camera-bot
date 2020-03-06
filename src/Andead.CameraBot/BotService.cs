@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Andead.CameraBot.Media;
@@ -74,19 +72,39 @@ namespace Andead.CameraBot
         public async Task Handle(ISnapshotRequest request, CancellationToken cancellationToken)
         {
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
-            var cameraService = scope.ServiceProvider.GetService<ICameraService>();
+            var registry = scope.ServiceProvider.GetRequiredService<ICameraRegistry>();
 
-            IEnumerable<string> cameraNames = (await cameraService.GetNames()
-                .ConfigureAwait(false)).ToList();
-
-            if (cameraNames.Any(request.Text.Equals))
+            Node node = await registry.GetNode(request.Path, cancellationToken).ConfigureAwait(false);
+            if (node == null)
             {
-                using Snapshot snapshot = await cameraService.GetSnapshot(request.Text).ConfigureAwait(false);
-                await _messenger.SendSnapshot(snapshot, request, cameraNames, cancellationToken).ConfigureAwait(false);
+                // invalid node, fallback to root
+                Node root = await registry.GetRootNode(cancellationToken).ConfigureAwait(false);
+                
+                // update navigation controls to the root's children
+                await _messenger
+                    .Navigate(root, request, alert: "The camera has been moved or deleted.", cancellationToken)
+                    .ConfigureAwait(false);
+
+                return;
+            }
+            
+            if (!node.IsLeaf())
+            {
+                // navigate to the selected node
+                await _messenger.Navigate(node, request, cancellationToken: cancellationToken).ConfigureAwait(false);
                 return;
             }
 
-            await _messenger.SendGreeting(request, cameraNames, cancellationToken).ConfigureAwait(false);
+            // show the node's view
+            var cameraService = scope.ServiceProvider.GetService<ICameraService>();
+
+            using Snapshot snapshot = await cameraService
+                .GetSnapshot(node, cancellationToken)
+                .ConfigureAwait(false);
+
+            await _messenger
+                .SendSnapshotAndNavigate(snapshot, request, node.Parent, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }
