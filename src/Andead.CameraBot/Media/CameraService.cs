@@ -33,7 +33,6 @@ namespace Andead.CameraBot.Media
                 else
                 {
                     snapshot.Success = false;
-                    snapshot.Message = "No image available";
                 }
 
                 return snapshot;

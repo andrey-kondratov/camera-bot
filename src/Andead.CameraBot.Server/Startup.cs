@@ -20,11 +20,6 @@ namespace Andead.CameraBot.Server
                 .AddJsonFile($"appsettings.{Env.Name}.json", true, true)
                 .AddEnvironmentVariables();
 
-            if (environment.IsDevelopment())
-            {
-                builder.AddUserSecrets<Startup>();
-            }
-
             Configuration = builder.Build();
         }
 

@@ -101,6 +101,10 @@ namespace Andead.CameraBot.Telegram
                 await _client.AnswerCallbackQueryAsync(query.Id, alert, showAlert: true, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
             }
+            
+            // quietly answer the query
+            await _client.AnswerCallbackQueryAsync(query.Id, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
             // update navigation controls in the current message
             InlineKeyboardMarkup replyMarkup = GetReplyMarkup(node);
@@ -114,6 +118,11 @@ namespace Andead.CameraBot.Telegram
             CancellationToken cancellationToken = default)
         {
             CallbackQuery query = ((SnapshotRequest)request).Query;
+            
+            // quietly answer the query
+            await _client.AnswerCallbackQueryAsync(query.Id, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
             long chatId = query.Message.Chat.Id;
             int requestMessageId = query.Message.MessageId;
 
@@ -121,13 +130,15 @@ namespace Andead.CameraBot.Telegram
             Message message;
             if (!snapshot.Success)
             {
-                // notify user
-                await _client.AnswerCallbackQueryAsync(query.Id, snapshot.Message, showAlert: true,
+                // clear the navigation controls in the current message
+                await _client.EditMessageReplyMarkupAsync(chatId, requestMessageId, InlineKeyboardMarkup.Empty(),
                     cancellationToken: cancellationToken).ConfigureAwait(false);
 
-                // update the current message navigation controls
+                // send a new text message 
+                string markdown = GetFailureMarkdown(snapshot);
                 replyMarkup = GetReplyMarkup(nodeToNavigate);
-                await _client.EditMessageReplyMarkupAsync(chatId, requestMessageId, replyMarkup: replyMarkup,
+
+                await _client.SendTextMessageAsync(chatId, markdown, ParseMode.Markdown, replyMarkup: replyMarkup,
                     cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 _logger.LogInformation("Updated markup in message {@Message} in response to request {@SnapshotRequest}",
@@ -136,14 +147,14 @@ namespace Andead.CameraBot.Telegram
             }
 
             // remove navigation controls from the current message
-            replyMarkup = RemoveNavigationRows(query.Message.ReplyMarkup);
+            replyMarkup = InlineKeyboardMarkup.Empty();
             await _client.EditMessageReplyMarkupAsync(chatId, requestMessageId, replyMarkup, cancellationToken)
                 .ConfigureAwait(false);
 
             // post the snapshot and navigation controls in a new message
             var photo = new InputOnlineFile(snapshot.Stream);
             string caption = GetCaptionMarkdown(snapshot);
-            replyMarkup = GetReplyMarkup(snapshot);
+            replyMarkup = GetReplyMarkup(snapshot.Node.Parent);
 
             message = await _client.SendPhotoAsync(chatId, photo, caption, ParseMode.Markdown, replyMarkup: replyMarkup,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -247,31 +258,6 @@ namespace Andead.CameraBot.Telegram
             return markup;
         }
 
-        private static InlineKeyboardMarkup GetReplyMarkup(Snapshot snapshot)
-        {
-            var row = new List<InlineKeyboardButton>();
-            if (!string.IsNullOrEmpty(snapshot.Node.Url))
-            {
-                row.Add(InlineKeyboardButton.WithUrl("Watch live", snapshot.Node.Url));
-            }
-
-            if (!string.IsNullOrEmpty(snapshot.Node.Website))
-            {
-                row.Add(InlineKeyboardButton.WithUrl(new Uri(snapshot.Node.Website).Host, snapshot.Node.Website));
-            }
-
-            var rows = new List<IEnumerable<InlineKeyboardButton>>();
-            rows.Add(row);
-
-            foreach (IEnumerable<InlineKeyboardButton> navigationRow in GetNavigationRows(snapshot.Node.Parent))
-            {
-                rows.Add(navigationRow);
-            }
-
-            var replyMarkup = new InlineKeyboardMarkup(rows);
-            return replyMarkup;
-        }
-
         private static IEnumerable<IEnumerable<InlineKeyboardButton>> GetNavigationRows(Node node)
         {
             foreach (IEnumerable<Node> row in node.Children.Batch(ReplyKeyboardWidth))
@@ -303,10 +289,61 @@ namespace Andead.CameraBot.Telegram
             var builder = new StringBuilder();
 
             DateTime taken = snapshot.TakenUtc.AddHours(_options.Value.HoursOffset);
-            builder.AppendFormat("*{0}*, ", snapshot.Node.Name);
+
+            if (!snapshot.Node.IsRootChild())
+            {
+                builder.AppendFormat("*{0}.* ", snapshot.Node.Parent.Name);
+            }
+
+            builder.AppendFormat("*{0}.* ", snapshot.Node.Name);
             builder.AppendFormat($"{{0:{_options.Value.DateTimeFormat}}}", taken);
 
+            if (!string.IsNullOrWhiteSpace(snapshot.Node.Url))
+            {
+                builder.AppendFormat("\n[Watch live]({0})", snapshot.Node.Url);
+            }
+
+            if (!string.IsNullOrWhiteSpace(snapshot.Node.Website))
+            {
+                builder.AppendFormat("\n[{0}]({0})", snapshot.Node.Website);
+            }
+
             return builder.ToString();
+        }
+
+        private static string GetFailureMarkdown(Snapshot snapshot)
+        {
+            var result = new StringBuilder();
+
+            if (!string.IsNullOrWhiteSpace(snapshot.Node.SnapshotUrl))
+            {
+                result.Append("I failed to get the snapshot you wanted. Try again. ");
+            }
+            else
+            {
+                result.Append("I do not know how to get a snapshot from this camera. ");
+
+                if (!string.IsNullOrWhiteSpace(snapshot.Node.Url))
+                {
+                    result.Append("Use \"Watch live\" to open the live stream.");
+                }
+                else if (!string.IsNullOrWhiteSpace(snapshot.Node.Website))
+                {
+                    result.Append("You may try using the website. ");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(snapshot.Node.Url))
+            {
+                result.AppendFormat("\n[Watch live]({0})", snapshot.Node.Url);
+            }
+
+            if (!string.IsNullOrWhiteSpace(snapshot.Node.Website))
+            {
+                result.AppendFormat("\n[{0}]({0})", snapshot.Node.Website);
+            }
+
+            return result.ToString();
         }
     }
 }

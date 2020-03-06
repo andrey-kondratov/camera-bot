@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Andead.CameraBot
 {
     internal static class NodeOptionsExtensions
     {
-        private static readonly HashAlgorithm HashAlgorithm = SHA1Managed.Create();
-
         /// <summary>
         ///     Builds a tree of <see cref="Node" /> from the given root node <see cref="NodeOptions" />.
         /// </summary>
@@ -43,12 +38,9 @@ namespace Andead.CameraBot
         private static string MakeId(NodeOptions options, Node parent)
         {
             string path = $"{parent?.Id}{options.Name}";
-            byte[] buffer = Encoding.UTF8.GetBytes(path);
+            int hash = path.GetDeterministicHashCode();
 
-            byte[] hash = HashAlgorithm.ComputeHash(buffer);
-            string id = Convert.ToBase64String(hash);
-
-            return id;
+            return hash.ToString();
         }
     }
 }
