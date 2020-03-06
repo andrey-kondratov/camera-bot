@@ -241,7 +241,7 @@ namespace Andead.CameraBot.Telegram
 
             string path = query.Data;
 
-            var snapshotRequest = new SnapshotRequest { Path = path, Query = query };
+            var snapshotRequest = new SnapshotRequest { Id = path, Query = query };
             _logger.LogInformation("Snapshot request received: {@SnapshotRequest}", snapshotRequest);
 
             var args = new SnapshotRequestedEventArgs(snapshotRequest, _cancellationToken);

@@ -74,7 +74,7 @@ namespace Andead.CameraBot
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             var registry = scope.ServiceProvider.GetRequiredService<ICameraRegistry>();
 
-            Node node = await registry.GetNode(request.Path, cancellationToken).ConfigureAwait(false);
+            Node node = await registry.GetNode(request.Id, cancellationToken).ConfigureAwait(false);
             if (node == null)
             {
                 // invalid node, fallback to root

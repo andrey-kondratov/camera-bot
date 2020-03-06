@@ -2,6 +2,6 @@
 {
     public interface ISnapshotRequest
     {
-        string Path { get; set; }
+        string Id { get; set; }
     }
 }
