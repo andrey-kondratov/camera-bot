@@ -203,6 +203,13 @@ namespace Andead.CameraBot.Telegram
             }
 
             request.Handled = true;
+
+            if (update.Type == UpdateType.CallbackQuery)
+            {
+                ProcessCallbackQuery(update.CallbackQuery);
+                return;
+            }
+
             SendGreeting(update.Message, _cancellationToken).GetAwaiter().GetResult();
         }
 
@@ -228,8 +235,11 @@ namespace Andead.CameraBot.Telegram
 
         private void OnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {
-            CallbackQuery query = e.CallbackQuery;
+            ProcessCallbackQuery(e.CallbackQuery);
+        }
 
+        private void ProcessCallbackQuery(CallbackQuery query)
+        {
             string username = query.Message.Chat.Username;
             string[] allowedUsernames = _options.Value.AllowedUsernames;
             if (allowedUsernames.Any() && !allowedUsernames.Contains(username))
