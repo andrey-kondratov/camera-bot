@@ -1,10 +1,11 @@
 ﻿using Andead.CameraBot.Messaging;
+using Telegram.Bot.Types;
 
 namespace Andead.CameraBot.Telegram
 {
     public class SnapshotRequest : ISnapshotRequest
     {
-        public long ChatId { get; set; }
-        public string Text { get; set; }
+        public string Id { get; set; }
+        public CallbackQuery Query { get; set; }
     }
 }

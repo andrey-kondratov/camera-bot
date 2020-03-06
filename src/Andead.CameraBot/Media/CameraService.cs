@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Andead.CameraBot.Media
 {
@@ -12,36 +10,32 @@ namespace Andead.CameraBot.Media
     {
         private readonly HttpClient _client;
         private readonly ILogger<CameraService> _logger;
-        private readonly IOptions<CameraBotOptions> _options;
 
-        public CameraService(HttpClient client, IOptions<CameraBotOptions> options, ILogger<CameraService> logger)
+        public CameraService(HttpClient client, ILogger<CameraService> logger)
         {
             _client = client;
-            _options = options;
             _logger = logger;
         }
 
-        public Task<IEnumerable<string>> GetNames()
-        {
-            return Task.FromResult(_options.Value.Cameras.Values.Select(value => value.Name));
-        }
-
-        public Task<Snapshot> GetSnapshot(string cameraName)
-        {
-            return GetSnapshotInternal(_options.Value.Cameras.Values.Single(options =>
-                string.Equals(options.Name, cameraName, StringComparison.OrdinalIgnoreCase)));
-        }
-
-        private async Task<Snapshot> GetSnapshotInternal(CameraOptions camera)
+        public async Task<Snapshot> GetSnapshot(Node node, CancellationToken cancellationToken = default)
         {
             try
             {
-                return new Snapshot
+                var snapshot = new Snapshot
                 {
-                    CameraName = camera.Name,
-                    CameraUrl = camera.Url,
-                    Stream = await _client.GetStreamAsync(camera.SnapshotUrl).ConfigureAwait(false)
+                    Node = node
                 };
+
+                if (!string.IsNullOrEmpty(node.SnapshotUrl))
+                {
+                    snapshot.Stream = await _client.GetStreamAsync(node.SnapshotUrl).ConfigureAwait(false);
+                }
+                else
+                {
+                    snapshot.Success = false;
+                }
+
+                return snapshot;
             }
             catch (TaskCanceledException)
             {
@@ -49,7 +43,7 @@ namespace Andead.CameraBot.Media
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "Error getting snapshot from {@Camera}.", camera);
+                _logger.LogError(exception, "Error getting snapshot from {@Camera}.", node);
             }
 
             return Snapshot.Error("Oops. Something went wrong.");

@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-
-namespace Andead.CameraBot
+﻿namespace Andead.CameraBot
 {
     public class CameraBotOptions
     {
-        public Dictionary<string, CameraOptions> Cameras { get; set; } = new Dictionary<string, CameraOptions>();
+        public NodeOptions Root { get; set; } = new NodeOptions();
         public int RetryCount { get; set; } = 3;
         public int TimeoutMilliseconds { get; set; } = 1000;
     }

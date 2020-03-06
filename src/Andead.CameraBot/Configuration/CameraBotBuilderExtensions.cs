@@ -17,6 +17,7 @@ namespace Andead.CameraBot
         {
             builder.Services.AddOptions();
             builder.Services.AddHostedService<BotService>();
+            builder.Services.AddSingleton<ICameraRegistry, CameraRegistry>();
 
             return builder;
         }
