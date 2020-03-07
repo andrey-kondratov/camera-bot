@@ -1,5 +1,4 @@
 FROM mcr.microsoft.com/dotnet/core/runtime-deps:3.1-buster-slim-arm32v7 AS base
-WORKDIR /
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 WORKDIR /src
