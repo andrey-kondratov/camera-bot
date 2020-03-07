@@ -1,18 +1,18 @@
 {
-   // Use IntelliSense to find out which attributes exist for C# debugging
-   // Use hover for the description of the existing attributes
-   // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
-   "version": "0.2.0",
-   "configurations": [
+    // Use IntelliSense to find out which attributes exist for C# debugging
+    // Use hover for the description of the existing attributes
+    // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
+    "version": "0.2.0",
+    "configurations": [
         {
             "name": ".NET Core Launch (web)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/Andead.CameraBot.Server/bin/Debug/netcoreapp3.1/cbot.dll",
+            "program": "${workspaceFolder}/src/CameraBot.Server/bin/Debug/netcoreapp3.1/bot.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/Andead.CameraBot.Server",
+            "cwd": "${workspaceFolder}/src/CameraBot.Server",
             "stopAtEntry": false,
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development",

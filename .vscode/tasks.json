@@ -11,7 +11,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/Andead.CameraBot.Server/Andead.CameraBot.Server.csproj"
+                "${workspaceFolder}/src/CameraBot.Server/CameraBot.Server.csproj"
             ],
             "problemMatcher": [
                 "$msCompile"
@@ -54,7 +54,7 @@
                 "run"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/src/Andead.CameraBot.Server",
+                "cwd": "${workspaceFolder}/src/CameraBot.Server",
                 "env": {
                     "PORT": "8443"
                 }

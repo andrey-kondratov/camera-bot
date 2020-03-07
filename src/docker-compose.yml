@@ -2,7 +2,7 @@ version: "3"
 
 services:
   web:
-    image: andeadlier/camera-bot:latest
+    image: camera-bot:latest
     build:
       context: .
       dockerfile: docker/amd64/Dockerfile
