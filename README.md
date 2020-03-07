@@ -25,9 +25,9 @@ Can be run in Docker or as a standalone app. Uses long-polling or webhooks to ge
 ```
 docker run kondranazzo/camera-bot \
   -e Bot__Telegram__ApiToken=123456789:ABCDEFGH \
-  -e Bot__Cameras__garden__Name=Garden \
-  -e Bot__Cameras__garden__SnapshotUrl=http://12.34.56.78/snapshot.jpg \
-  -e Bot__Cameras__garden__Url=http://12.34.56.78/video.html # optional, used only as an external link in captions
+  -e Bot__Cameras__root__children__0__Name=Garden \
+  -e Bot__Cameras__root__children__0__SnapshotUrl=http://12.34.56.78/snapshot.jpg \
+  -e Bot__Cameras__root__children__0__Url=http://12.34.56.78/video.html # optional, used only as an external link in captions
 ```
 
 ### SOCKS
