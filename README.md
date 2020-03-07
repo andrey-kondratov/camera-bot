@@ -1,7 +1,7 @@
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/andead/camera-bot)
 ![GitHub last commit](https://img.shields.io/github/last-commit/andead/camera-bot)
-[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/kondranazzo/camera-bot)](https://hub.docker.com/r/kondranazzo/camera-bot/builds)
-[![Docker Pulls](https://img.shields.io/docker/pulls/kondranazzo/camera-bot)](https://hub.docker.com/r/kondranazzo/camera-bot)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/andeadlier/camera-bot)](https://hub.docker.com/r/andeadlier/camera-bot/builds)
+[![Docker Pulls](https://img.shields.io/docker/pulls/andeadlier/camera-bot)](https://hub.docker.com/r/andeadlier/camera-bot)
 ![GitHub](https://img.shields.io/github/license/andead/camera-bot)
 
 # Camera bot
@@ -23,7 +23,7 @@ Can be run in Docker or as a standalone app. Uses long-polling or webhooks to ge
 ## Run
 
 ```
-docker run kondranazzo/camera-bot \
+docker run andeadlier/camera-bot \
   -e Bot__Telegram__ApiToken=123456789:ABCDEFGH \
   -e Bot__Cameras__root__children__0__Name=Garden \
   -e Bot__Cameras__root__children__0__SnapshotUrl=http://12.34.56.78/snapshot.jpg \
