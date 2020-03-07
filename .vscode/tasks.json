@@ -32,10 +32,15 @@
             "args": [
                 "watch",
                 "run",
-                "${workspaceFolder}/src/Andead.CameraBot.Server/Andead.CameraBot.Server.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/Andead.CameraBot.Server",
+                "env": {
+                    "PORT": "8443"
+                }
+            },
             "problemMatcher": "$msCompile"
         }
     ]
