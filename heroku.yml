@@ -1,3 +1,0 @@
-build:
-  docker:
-    web: src/docker/amd64/Dockerfile
