@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  web:
+    image: kondranazzo/camera-bot:latest
+    build:
+      context: .
+      dockerfile: docker/amd64/Dockerfile

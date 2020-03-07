@@ -3,27 +3,47 @@
     "tasks": [
         {
             "label": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/Andead.CameraBot.Server/Andead.CameraBot.Server.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "${workspaceFolder}/src/Andead.CameraBot.Server/Andead.CameraBot.Server.csproj"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": [
+                "$msCompile"
+            ]
         },
         {
-            "label": "publish",
-            "command": "dotnet",
+            "label": "docker-compose build",
+            "group": "build",
+            "command": "docker-compose",
             "type": "process",
             "args": [
-                "publish",
-                "${workspaceFolder}/src/Andead.CameraBot.Server/Andead.CameraBot.Server.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "build"
             ],
-            "problemMatcher": "$msCompile"
+            "options": {
+                "cwd": "src"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docker-compose build (arm32)",
+            "group": "build",
+            "command": "docker-compose",
+            "type": "process",
+            "args": [
+                "-f",
+                "docker-compose.arm32.yml",
+                "build"
+            ],
+            "options": {
+                "cwd": "src"
+            },
+            "problemMatcher": []
         },
         {
             "label": "watch",
@@ -31,9 +51,7 @@
             "type": "process",
             "args": [
                 "watch",
-                "run",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "run"
             ],
             "options": {
                 "cwd": "${workspaceFolder}/src/Andead.CameraBot.Server",
@@ -41,7 +59,9 @@
                     "PORT": "8443"
                 }
             },
-            "problemMatcher": "$msCompile"
+            "problemMatcher": [
+                "$msCompile"
+            ]
         }
     ]
 }
