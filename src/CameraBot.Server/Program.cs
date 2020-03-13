@@ -4,7 +4,6 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Serilog;
 using Serilog.Events;
-using Serilog.Formatting.Json;
 
 namespace CameraBot.Server
 {
@@ -45,14 +44,10 @@ namespace CameraBot.Server
                 }, true);
 
             configuration = Env.IsDevelopment
-                ? configuration
-                    .MinimumLevel.Debug()
-                    .WriteTo.Console()
-                : configuration
-                    .MinimumLevel.Information()
-                    .WriteTo.Console(new JsonFormatter());
+                ? configuration.MinimumLevel.Debug()
+                : configuration.MinimumLevel.Information();
 
-            return configuration;
+            return configuration.WriteTo.Console();
         }
 
         public static IWebHostBuilder CreateHostBuilder(string[] args)

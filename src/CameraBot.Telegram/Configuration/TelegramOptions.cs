@@ -10,5 +10,6 @@ namespace CameraBot.Telegram
         public string DateTimeFormat { get; set; } = "yyyy-MM-dd HH:mm:ss";
         public int HoursOffset { get; set; } = 3;
         public WebhookOptions Webhook { get; set; } = new WebhookOptions();
+        public FeedbackOptions Feedback { get; set; } = new FeedbackOptions();
     }
 }

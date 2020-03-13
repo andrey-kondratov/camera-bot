@@ -9,6 +9,8 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/src/CameraBot.Server/bin/Debug/netcoreapp3.1/bot.dll",
             "args": [],
