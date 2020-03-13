@@ -83,3 +83,10 @@ When no white list specified, the bot answers everyone.
 
 - `Bot__RetryCount` sets the number of times to retry downloading a snapshot, the default is 3;
 - `Bot__TimeoutMilliseconds` sets the max number in milliseconds for the snapshot downloading to complete, the default is 1000 ms.
+
+### Feedback
+
+For `/feedback` command, the configuration options are:
+
+- `Bot__Telegram__Feedback__ChatId` - the id of the chat where to forward the feedback messages;
+- `Bot__Telegram__Feedback__Header` - an optional header to prepend to the messages.
