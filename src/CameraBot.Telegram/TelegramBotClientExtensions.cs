@@ -112,7 +112,7 @@ namespace CameraBot.Telegram
         {
             string text = MessageHelpers.BadRequestMessage;
 
-            return client.SendTextMessageAsync(message.Chat.Id, text, ParseMode.Markdown,
+            return client.SendTextMessageAsync(message.Chat.Id, text, ParseMode.Markdown, replyMarkup: new ReplyKeyboardRemove(),
                 replyToMessageId: message.MessageId, cancellationToken: cancellationToken);
         }
     }

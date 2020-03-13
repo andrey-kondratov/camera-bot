@@ -280,8 +280,8 @@ namespace CameraBot.Telegram
             var chatId = _options.Feedback.ChatId;
             if (chatId.HasValue)
             {
-                string text = MessageHelpers.GetFeedbackMarkdown(message, _options.Feedback.Label);
-                return _client.SendTextMessageAsync(chatId.Value, text, ParseMode.Markdown,
+                string text = MessageHelpers.GetFeedbackText(message, _options.Feedback.Header);
+                return _client.SendTextMessageAsync(chatId.Value, text, ParseMode.Default,
                     disableWebPagePreview: true, cancellationToken: cancellationToken);
             }
 

@@ -101,18 +101,18 @@ namespace CameraBot.Telegram
             return result.ToString();
         }
 
-        internal static string GetFeedbackMarkdown(Message message, string label)
+        internal static string GetFeedbackText(Message message, string header)
         {
             var result = new StringBuilder();
 
-            result.Append("*Feedback received!*").AppendLine().AppendLine();
+            result.Append("Feedback received!").AppendLine().AppendLine();
 
-            if (!string.IsNullOrEmpty(label))
+            if (!string.IsNullOrEmpty(header))
             {
-                result.AppendFormat("_label: {0}_", label).AppendLine();
+                result.Append(header).AppendLine();
             }
 
-            result.AppendFormat("_from: @{0}_", message.From.Username).AppendLine().AppendLine();
+            result.AppendFormat("from: @{0}", message.From.Username).AppendLine().AppendLine();
             result.Append(message.Text);
 
             return result.ToString();
