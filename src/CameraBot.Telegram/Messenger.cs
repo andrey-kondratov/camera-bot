@@ -109,7 +109,7 @@ namespace CameraBot.Telegram
                 throw new InvalidOperationException("Messenger was not started.");
             }
 
-            Message message = await _client.Navigate(node, request, alert, cancellationToken);
+            await _client.Navigate(node, request, alert, cancellationToken);
 
             _logger.LogInformation("User {UserName} navigated to {NodeName}",
                 ((SnapshotRequest)request).Query.From.Username, node.Name);
@@ -228,14 +228,14 @@ namespace CameraBot.Telegram
         private async Task PromptSnapshot(Message message, CancellationToken cancellationToken)
         {
             Node root = await _registry.GetRootNode(cancellationToken).ConfigureAwait(false);
-            Message response = await _client.GreetSnapshot(message, root, cancellationToken).ConfigureAwait(false);
+            await _client.GreetSnapshot(message, root, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Sent snapshot prompt to {UserName}", message.Chat.Username);
         }
 
         private async Task PromptFeedback(Message message, CancellationToken cancellationToken)
         {
-            Message response = await _client.PromptFeedback(message, cancellationToken).ConfigureAwait(false);
+            await _client.PromptFeedback(message, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Sent feedback prompt to {UserName}", message.Chat.Username);
         }
@@ -260,7 +260,6 @@ namespace CameraBot.Telegram
 
             var args = new SnapshotRequestedEventArgs(snapshotRequest, cancellationToken);
             SnapshotRequested?.Invoke(this, args);
-            return;
         }
 
         private bool IsUsernameValid(string username)
@@ -271,8 +270,8 @@ namespace CameraBot.Telegram
         private bool IsReplyToFeedbackPrompt(Message message)
         {
             Message replyTo = message.ReplyToMessage;
-            return replyTo?.From.Username == _me.Username &&
-                replyTo.Text == MessageHelpers.GetFeedbackPromptMarkdown();
+            return replyTo != null && replyTo.From.Username == _me.Username &&
+                replyTo.Text == MessageHelpers.FeedbackPromptMarkdown;
         }
 
         private Task OnFeedbackMessage(Message message, CancellationToken cancellationToken)

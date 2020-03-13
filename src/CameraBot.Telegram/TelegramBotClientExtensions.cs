@@ -15,7 +15,7 @@ namespace CameraBot.Telegram
         public static Task<Message> GreetSnapshot(this TelegramBotClient client, Message message, Node root,
             CancellationToken cancellationToken = default)
         {
-            string text = MessageHelpers.GetSnapshotGreetingMarkdown();
+            string text = MessageHelpers.SnapshotGreetingMarkdown;
             IReplyMarkup replyMarkup = MessageHelpers.GetReplyMarkup(root);
 
             return client.SendTextMessageAsync(message.Chat.Id, text, ParseMode.Markdown,
@@ -25,7 +25,7 @@ namespace CameraBot.Telegram
         public static Task<Message> PromptFeedback(this TelegramBotClient client, Message message,
             CancellationToken cancellationToken = default)
         {
-            string text = MessageHelpers.GetFeedbackPromptMarkdown();
+            string text = MessageHelpers.FeedbackPromptMarkdown;
 
             return client.SendTextMessageAsync(message.Chat.Id, text, ParseMode.Markdown,
                 cancellationToken: cancellationToken);
@@ -110,7 +110,7 @@ namespace CameraBot.Telegram
         public static Task<Message> SendBadRequest(this TelegramBotClient client, Message message,
             CancellationToken cancellationToken = default)
         {
-            string text = MessageHelpers.GetBadRequestMessage();
+            string text = MessageHelpers.BadRequestMessage;
 
             return client.SendTextMessageAsync(message.Chat.Id, text, ParseMode.Markdown,
                 replyToMessageId: message.MessageId, cancellationToken: cancellationToken);

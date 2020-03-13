@@ -35,15 +35,9 @@ namespace CameraBot.Telegram
             return markup;
         }
 
-        internal static string GetFeedbackPromptMarkdown()
-        {
-            return "To leave your feedback, reply to this message";
-        }
+        internal static string FeedbackPromptMarkdown => "To leave your feedback, reply to this message";
 
-        internal static string GetSnapshotGreetingMarkdown()
-        {
-            return "Select a camera";
-        }
+        internal static string SnapshotGreetingMarkdown => "Select a camera";
 
         public static string GetCaptionMarkdown(Snapshot snapshot, int hoursOffset, string dateTimeFormat)
         {
@@ -124,9 +118,6 @@ namespace CameraBot.Telegram
             return result.ToString();
         }
 
-        internal static string GetBadRequestMessage()
-        {
-            return "Sorry, I don't know that command.";
-        }
+        internal static string BadRequestMessage => "Sorry, I don't know that command.";
     }
 }
