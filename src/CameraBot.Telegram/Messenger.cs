@@ -288,6 +288,8 @@ namespace CameraBot.Telegram
                 await _client.SendTextMessageAsync(message.Chat.Id, MessageHelpers.FeedbackResponseMarkdown,
                     ParseMode.Markdown, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
+
+                return;
             }
 
             _logger.LogWarning("Feedback from {UserName} discarded: no feedback chat id configured.",
