@@ -274,20 +274,24 @@ namespace CameraBot.Telegram
                 replyTo.Text == MessageHelpers.FeedbackPromptMarkdown;
         }
 
-        private Task OnFeedbackMessage(Message message, CancellationToken cancellationToken)
+        private async Task OnFeedbackMessage(Message message, CancellationToken cancellationToken)
         {
             // send a message to the author
             var chatId = _options.Feedback.ChatId;
             if (chatId.HasValue)
             {
                 string text = MessageHelpers.GetFeedbackText(message, _options.Feedback.Header);
-                return _client.SendTextMessageAsync(chatId.Value, text, ParseMode.Default,
-                    disableWebPagePreview: true, cancellationToken: cancellationToken);
+                await _client.SendTextMessageAsync(chatId.Value, text, ParseMode.Default,
+                    disableWebPagePreview: true, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+
+                await _client.SendTextMessageAsync(message.Chat.Id, MessageHelpers.FeedbackResponseMarkdown,
+                    ParseMode.Markdown, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
             }
 
             _logger.LogWarning("Feedback from {UserName} discarded: no feedback chat id configured.",
                 message.From.Username);
-            return Task.CompletedTask;
         }
     }
 }
