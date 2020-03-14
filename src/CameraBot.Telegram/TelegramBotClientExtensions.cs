@@ -12,7 +12,15 @@ namespace CameraBot.Telegram
 {
     internal static class TelegramBotClientExtensions
     {
-        public static Task<Message> GreetSnapshot(this TelegramBotClient client, Message message, Node root,
+        public static Task<Message> Greet(this TelegramBotClient client, Message message,
+            CancellationToken cancellationToken = default)
+        {
+            string text = MessageHelpers.GreetingMessage;
+
+            return client.SendTextMessageAsync(message.Chat.Id, text, cancellationToken: cancellationToken);
+        }
+
+        public static Task<Message> PromptSnapshot(this TelegramBotClient client, Message message, Node root,
             CancellationToken cancellationToken = default)
         {
             string text = MessageHelpers.SnapshotGreetingMarkdown;

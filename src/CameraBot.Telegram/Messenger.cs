@@ -207,6 +207,8 @@ namespace CameraBot.Telegram
 
             switch (message.Text)
             {
+                case Constants.StartCommand:
+                    return Greet(message, cancellationToken);
                 case Constants.SnapshotCommand:
                     return PromptSnapshot(message, cancellationToken);
                 case Constants.FeedbackCommand:
@@ -216,6 +218,13 @@ namespace CameraBot.Telegram
                         ? OnFeedbackMessage(message, cancellationToken)
                         : OnBadRequest(message, cancellationToken);
             }
+        }
+
+        private async Task Greet(Message message, CancellationToken cancellationToken)
+        {
+            await _client.Greet(message, cancellationToken);
+
+            _logger.LogInformation("Greeted user {UserName}", message.Chat.Username);
         }
 
         private async Task OnBadRequest(Message message, CancellationToken cancellationToken)
@@ -228,7 +237,7 @@ namespace CameraBot.Telegram
         private async Task PromptSnapshot(Message message, CancellationToken cancellationToken)
         {
             Node root = await _registry.GetRootNode(cancellationToken).ConfigureAwait(false);
-            await _client.GreetSnapshot(message, root, cancellationToken).ConfigureAwait(false);
+            await _client.PromptSnapshot(message, root, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Sent snapshot prompt to {UserName}", message.Chat.Username);
         }
