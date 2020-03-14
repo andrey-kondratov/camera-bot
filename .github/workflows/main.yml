@@ -10,19 +10,21 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  publish:
-    # The type of runner that the job will run on
+  nuget:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
     - name: Gather tools
       run: dotnet tool restore
-    - name: Build and pack
-      run: dotnet cake
-    - name: Push to NuGet.org
+    - name: Build, pack and push to NuGet.org
       continue-on-error: true
-      run: dotnet cake --exclusive --target=push --nuGetApiKey=${{ secrets.nuGetApiKey }}
+      run: dotnet cake --target=push --nuGetApiKey=${{ secrets.nuGetApiKey }}
+  dockerhub:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Gather tools
+      run: dotnet tool restore
+    - name: Login to DockerHub
+      run: docker login --username andeadlier --password ${{ secrets.dockerHubAccessToken }}
+    - name: Build, tag and push to DockerHub
+      run: dotnet cake docker.cake --target=push
