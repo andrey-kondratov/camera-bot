@@ -19,11 +19,9 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
-
-    # Build in Release and create packages
-    - name: Pack
+    - name: Gather tools
+      run: dotnet tool restore
+    - name: Build and pack
       run: dotnet cake
-   
-    # Push packages to NuGet.org
-    - name: Push
+    - name: Push to NuGet.org
       run: dotnet cake --exclusive --target=push --nuGetApiKey=${{ secrets.nuGetApiKey }}
