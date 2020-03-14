@@ -18,27 +18,7 @@ A Telegram bot for HTTP web cameras.
 
 - Telegram
 
-## Configuration
-
-Cameras support tree-like structure. An example for appsettings.json:
-
-```
-{
-  "Bot": {
-    "Root": {
-      "Children": [{
-        "Name": "Garden",
-        "SnapshotUrl": "http://12.34.56.78/snapshot.jpg",
-        "Url": "http://12.34.56.78/watch.html", // will generate a link to open in browser
-        "Website": "http://12.34.56.78", // will append a link to the website
-        "Children": [
-          // Properties Url, SnapshotUrl and Website are inherited by children
-        ]
-      }]
-    }
-  }
-}
-```
+## Running
 
 An example for `docker run` with environment variables:
 
@@ -99,6 +79,8 @@ Describe cameras and set up Telegram in appsettings.json:
   }
 }
 ```
+
+## Features
 
 ### Webhooks
 
