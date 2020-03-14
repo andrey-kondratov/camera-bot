@@ -121,5 +121,7 @@ namespace CameraBot.Telegram
         internal static string BadRequestMessage => "Sorry, I don't know that command.";
 
         public static string FeedbackResponseMarkdown => "Thank you for your feedback.";
+
+        public static string GreetingMessage => $"Use {Constants.SnapshotCommand} to open the camera list.";
     }
 }
