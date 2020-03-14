@@ -5,6 +5,7 @@
     <RootNamespace>CameraBot.Server</RootNamespace>
     <Version>2.2.1</Version>
     <AssemblyName>bot</AssemblyName>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
