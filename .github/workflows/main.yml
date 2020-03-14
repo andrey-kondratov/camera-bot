@@ -24,4 +24,5 @@ jobs:
     - name: Build and pack
       run: dotnet cake
     - name: Push to NuGet.org
+      continue-on-error: true
       run: dotnet cake --exclusive --target=push --nuGetApiKey=${{ secrets.nuGetApiKey }}
