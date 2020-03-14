@@ -50,10 +50,9 @@ docker run andeadlier/camera-bot \
 
 ## Adding to an existing ASP.NET Core application
 
-Install both [CameraBot](https://www.nuget.org/packages/CameraBot/) and [CameraBot.Telegram](https://www.nuget.org/packages/CameraBot.Telegram/) packages:
+Install the NuGet package:
 
 ```
-dotnet add package CameraBot
 dotnet add package CameraBot.Telegram
 ```
 
