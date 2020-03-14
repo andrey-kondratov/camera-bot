@@ -1,5 +1,4 @@
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/andead/camera-bot)
-![GitHub last commit](https://img.shields.io/github/last-commit/andead/camera-bot)
+[![Nuget](https://img.shields.io/nuget/v/CameraBot.Telegram)](https://www.nuget.org/packages/CameraBot.Telegram/)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/andeadlier/camera-bot)](https://hub.docker.com/r/andeadlier/camera-bot/builds)
 [![Docker Pulls](https://img.shields.io/docker/pulls/andeadlier/camera-bot)](https://hub.docker.com/r/andeadlier/camera-bot)
 ![GitHub](https://img.shields.io/github/license/andead/camera-bot)
