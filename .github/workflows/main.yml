@@ -22,9 +22,10 @@ jobs:
   dockerhub:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: Gather tools
       run: dotnet tool restore
     - name: Login to DockerHub
       run: docker login --username andeadlier --password ${{ secrets.dockerHubAccessToken }}
     - name: Build, tag and push to DockerHub
-      run: pwd & ls # dotnet cake ./docker.cake --target=push
+      run: dotnet cake ./docker.cake --target=push
