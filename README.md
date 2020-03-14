@@ -138,7 +138,7 @@ When no white list specified, the bot answers everyone.
 
 ### Feedback
 
-For `/feedback` command, the configuration options are:
+For the `/feedback` command, the configuration options are:
 
 - `Bot__Telegram__Feedback__ChatId` - the id of the chat where to forward the feedback messages;
 - `Bot__Telegram__Feedback__Header` - an optional header to prepend to the messages.
