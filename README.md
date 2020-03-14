@@ -50,6 +50,58 @@ docker run andeadlier/camera-bot \
   -e Bot__Cameras__root__children__0__SnapshotUrl=http://12.34.56.78/snapshot.jpg
 ```
 
+## Adding to an existing ASP.NET Core application
+
+Install both [CameraBot](https://www.nuget.org/packages/CameraBot/) and [CameraBot.Telegram](https://www.nuget.org/packages/CameraBot.Telegram/) packages:
+
+```
+dotnet add package CameraBot
+dotnet add package CameraBot.Telegram
+```
+
+Update Startup.cs as follows:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+  // the bot core logic and Telegram implementation
+  services
+    .AddCameraBot(Configuration.GetSection("Bot"))
+    .AddTelegram(Configuration.GetSection("Bot:Telegram"));
+
+  // ...
+}
+
+public void Configure(IApplicationBuilder app, IWebHostEnvironment environment)
+{
+  // ...
+
+  // required if you need the webhooks mode
+  app.UseCameraBot();
+}
+```
+
+Describe cameras and set up Telegram in appsettings.json:
+
+```json
+{
+  "Bot": {
+    "Root": {
+      "Name": "42nd Street",
+      "SnapshotUrl": "https://static.skylinewebcams.com/_9784192001.jpg",
+      "Url": "https://www.skylinewebcams.com/en/webcam/united-states/new-york/new-york/nyc-42th-street.html",
+      "Website": "https://www.skylinewebcams.com"
+    },
+    "Telegram": {
+      "ApiToken": "<YOUR_API_TOKEN>",
+      "Webhook": {
+        "Url": "<YOUR_WEBHOOK_URL>"
+      }
+    }
+  }
+}
+```
+
 ### Webhooks
 
 The mode is selected upon startup based on presence of the webhook URL in the app configuration.

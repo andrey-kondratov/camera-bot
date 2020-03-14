@@ -2,15 +2,20 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>2.2.1</Version>
+    <Version>2.2.2</Version>
     <LangVersion>latest</LangVersion>
 
     <PackageId>CameraBot.Telegram</PackageId>
+    <Title>Camera Bot (Telegram)</Title>
     <Authors>Andrew Kondratov</Authors>
     <PackageTags>Telegram;Bot;Webcam;Camera;Chat;Scalable;Http;Webhooks;Long-polling</PackageTags>
     <Description>
       A Telegram bot for HTTP web cameras.
     </Description>
+    <Copyright>Copyright (c) 2020 Andrey Kondratov</Copyright>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/andead/camera-bot.git</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
