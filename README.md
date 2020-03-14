@@ -1,3 +1,4 @@
+![CI](https://github.com/andead/camera-bot/workflows/CI/badge.svg)
 [![Nuget](https://img.shields.io/nuget/v/CameraBot.Telegram)](https://www.nuget.org/packages/CameraBot.Telegram/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/andeadlier/camera-bot)](https://hub.docker.com/r/andeadlier/camera-bot)
 ![GitHub](https://img.shields.io/github/license/andead/camera-bot)
