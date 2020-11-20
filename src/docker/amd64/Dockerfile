@@ -1,6 +1,6 @@
-FROM mcr.microsoft.com/dotnet/core/runtime-deps:3.1-alpine AS base
+FROM mcr.microsoft.com/dotnet/runtime-deps:5.0-alpine AS base
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
 COPY . .
 RUN dotnet publish "CameraBot.Server/CameraBot.Server.csproj" \
