@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '5.0'
     - name: Gather tools
       run: dotnet tool restore
     - name: Build, pack and push to NuGet.org
