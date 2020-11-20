@@ -1,6 +1,7 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var nuGetApiKey = Argument("nuGetApiKey", "");
+var nuGetSource = Argument("nuGetSource", "https://api.nuget.org/v3/index.json");
 var outputDirectory = "./out";
 
 // General
@@ -31,7 +32,7 @@ Task("Pack")
 // Push
 var pushSettings = new DotNetCoreNuGetPushSettings
 {
-    Source = "https://api.nuget.org/v3/index.json",
+    Source = nuGetSource,
     ApiKey = nuGetApiKey
 };
 

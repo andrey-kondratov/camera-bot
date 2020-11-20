@@ -19,9 +19,14 @@ jobs:
         dotnet-version: '5.0'
     - name: Gather tools
       run: dotnet tool restore
-    - name: Build, pack and push to NuGet.org
+    - name: Build and pack
+      run: dotnet cake --target=pack
+    - name: Push to NuGet.org
       continue-on-error: true
-      run: dotnet cake --target=push --nuGetApiKey=${{ secrets.nuGetApiKey }}
+      run: dotnet cake --target=push --exclusive --nuGetApiKey=${{ secrets.nuGetApiKey }}
+    - name: Push to GitHub
+      continue-on-error: true
+      run: dotnet cake --target=push --exclusive --nuGetSource=https://nuget.pkg.github.com/andead/index.json --nuGetApiKey=${{ secrets.GITHUB_TOKEN }}
   dockerhub:
     runs-on: ubuntu-latest
     steps:
