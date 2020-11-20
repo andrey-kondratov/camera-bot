@@ -1,14 +1,12 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
-# Controls when the action will run. Triggers the workflow on push or pull request 
-# events but only for the master branch
 on:
+  create:
+    tags:
+      - v*
   push:
     branches: [ master ]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   nuget:
     runs-on: ubuntu-latest
@@ -37,3 +35,13 @@ jobs:
       run: docker login --username andeadlier --password ${{ secrets.dockerHubAccessToken }}
     - name: Build, tag and push to DockerHub
       run: dotnet cake ./docker.cake --target=push
+  github-docker-packages:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Gather tools
+      run: dotnet tool restore
+    - name: Login to GitHub
+      run: docker login ghcr.io --username andead --password ${{ secrets.GH_DOCKER_PACKAGES_TOKEN }}
+    - name: Build, tag and push to GitHub Docker packages
+      run: dotnet cake ./docker.cake --target=push --registry ghcr.io/andead
