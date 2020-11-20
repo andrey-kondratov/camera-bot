@@ -44,4 +44,4 @@ jobs:
     - name: Login to GitHub
       run: docker login ghcr.io --username andead --password ${{ secrets.GH_DOCKER_PACKAGES_TOKEN }}
     - name: Build, tag and push to GitHub Docker packages
-      run: dotnet cake ./docker.cake --target=push --registry ghcr.io/andead
+      run: dotnet cake ./docker.cake --target=push --registry=ghcr.io/andead
