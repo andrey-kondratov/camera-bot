@@ -71,7 +71,7 @@ Describe cameras and set up Telegram in appsettings.json:
       "Website": "https://www.skylinewebcams.com"
     },
     "Telegram": {
-      "ApiToken": "<YOUR_API_TOKEN>",
+      "ApiToken": "<5994802680:AAHkNBpWomVtOb7JUCgjriDbn9fnkYMyFyM>",
       "Webhook": {
         "Url": "<YOUR_WEBHOOK_URL>"
       }
